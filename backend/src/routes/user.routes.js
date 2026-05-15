@@ -1,0 +1,12 @@
+import express from 'express';
+import { protect, allow } from '../middleware/auth.js';
+import { createUser, getUsers, getUserById, updateUser, deleteUser, getUserTree } from '../controllers/user.controller.js';
+const router = express.Router();
+router.use(protect);
+router.post('/',           allow('head_admin', 'admin'), createUser);
+router.get('/',            allow('head_admin', 'admin', 'associate'), getUsers);
+router.get('/:id',         allow('head_admin', 'admin', 'associate'), getUserById);
+router.get('/:id/tree',    allow('head_admin', 'admin', 'associate'), getUserTree);
+router.patch('/:id',       allow('head_admin', 'admin', 'associate'), updateUser);
+router.delete('/:id',      allow('head_admin'), deleteUser);
+export default router;
