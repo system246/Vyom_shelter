@@ -41,9 +41,10 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
-  const authFetch = (url, opts = {}) =>
-    fetch(url, { ...opts, headers: { ...opts.headers, Authorization: `Bearer ${token}` } });
-
+ const authFetch = (url, opts = {}) => {
+  const fullUrl = url.startsWith('http') ? url : `${BASE}${url.replace('/api', '')}`;
+  return fetch(fullUrl, { ...opts, headers: { ...opts.headers, Authorization: `Bearer ${token}` } });
+};
   return (
     <AuthContext.Provider value={{ user, token, loading, login, logout, authFetch }}>
       {children}
