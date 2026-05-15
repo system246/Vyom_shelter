@@ -257,9 +257,25 @@ export default function AssociatesList() {
                   <Row label="Relation"     value={detail.professional?.nomineeRelation} />
                 </div>
                 <div>
-                  <p className="section-title">Documents</p>
-                  <Row label="Aadhaar No"   value={detail.documents?.aadhaarNumber} />
-                  <Row label="PAN No"       value={detail.documents?.panNumber} />
+                 <p className="section-title">Documents</p>
+                  <Row label="Aadhaar No" value={detail.documents?.aadhaarNumber} />
+                  <Row label="PAN No"     value={detail.documents?.panNumber} />
+                  <div className="flex gap-3 mt-2">
+                    {detail.documents?.aadhaarFile ? (
+                      <a href={`${import.meta.env.VITE_API_URL?.replace('/api','') || ''}/uploads/${detail.documents.aadhaarFile}`}
+                        target="_blank" rel="noopener noreferrer"
+                        className="btn-ghost border border-gray-200 px-3 py-1.5 text-xs flex items-center gap-1">
+                        <Eye size={13} /> View Aadhaar
+                      </a>
+                    ) : <span className="text-xs text-gray-400">Aadhaar not uploaded</span>}
+                    {detail.documents?.panFile ? (
+                      <a href={`${import.meta.env.VITE_API_URL?.replace('/api','') || ''}/uploads/${detail.documents.panFile}`}
+                        target="_blank" rel="noopener noreferrer"
+                        className="btn-ghost border border-gray-200 px-3 py-1.5 text-xs flex items-center gap-1">
+                        <Eye size={13} /> View PAN
+                      </a>
+                    ) : <span className="text-xs text-gray-400">PAN not uploaded</span>}
+                  </div>
                 </div>
                 <div>
                   <p className="section-title">Bank Details</p>
