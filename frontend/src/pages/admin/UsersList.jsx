@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { UserPlus, Trash2, RefreshCw, Edit, X, ChevronDown, ChevronRight, Shield, User, Users } from 'lucide-react';
+import { UserPlus, Trash2, RefreshCw, ChevronDown, ChevronRight, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const ROLE_STYLE = {
@@ -61,6 +61,7 @@ export default function UsersList() {
   const [tree, setTree]       = useState([]);
   const [tab, setTab]         = useState('list');
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -122,7 +123,14 @@ export default function UsersList() {
         <div className="text-center py-12 text-gray-400 text-sm">Loading...</div>
       ) : tab === 'list' ? (
         <div className="card overflow-hidden">
-          {users.length === 0 ? (
+          {/* Search */}
+          <div className="p-4 border-b border-gray-100">
+            <div className="relative">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input className="input-base pl-9" placeholder="Search name or email..." value={search} onChange={e => setSearch(e.target.value)} />
+            </div>
+          </div>
+          {users.filter(u => !search || u.profile?.fullName?.toLowerCase().includes(search.toLowerCase()) || u.email?.toLowerCase().includes(search.toLowerCase())).length === 0 ? (
             <div className="p-12 text-center text-gray-400 text-sm">No users yet. <Link to="/admin/users/create" className="text-[#1a3a5c] underline">Create one</Link>.</div>
           ) : (
             <table className="w-full">
@@ -134,7 +142,7 @@ export default function UsersList() {
                 </tr>
               </thead>
               <tbody>
-                {users.map(u => (
+                {users.filter(u => !search || u.profile?.fullName?.toLowerCase().includes(search.toLowerCase()) || u.email?.toLowerCase().includes(search.toLowerCase())).map(u => (
                   <tr key={u._id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">

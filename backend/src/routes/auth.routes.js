@@ -1,7 +1,12 @@
 import express from 'express';
-import { login, getMe } from '../controllers/auth.controller.js';
+import { signup, verifyOTP, resendOTP, login, getMe, forgotPassword, resetPassword } from '../controllers/auth.controller.js';
 import { protect } from '../middleware/auth.js';
 const router = express.Router();
-router.post('/login', login);
-router.get('/me', protect, getMe);
+router.post('/signup',          signup);
+router.post('/verify-otp',      verifyOTP);
+router.post('/resend-otp',      resendOTP);
+router.post('/login',           login);
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password',  resetPassword);
+router.get('/me',               protect, getMe);
 export default router;

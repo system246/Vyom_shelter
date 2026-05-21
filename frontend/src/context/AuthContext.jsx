@@ -22,7 +22,7 @@ export function AuthProvider({ children }) {
   }, [token]);
 
   const login = async (email, password) => {
-    const res = await fetch(`${BASE}/auth/login`, {
+    const res  = await fetch(`${BASE}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -41,10 +41,9 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
- const authFetch = (url, opts = {}) => {
-  const fullUrl = url.startsWith('http') ? url : `${BASE}${url.replace('/api', '')}`;
-  return fetch(fullUrl, { ...opts, headers: { ...opts.headers, Authorization: `Bearer ${token}` } });
-};
+  const authFetch = (url, opts = {}) =>
+    fetch(url, { ...opts, headers: { ...opts.headers, Authorization: `Bearer ${token}` } });
+
   return (
     <AuthContext.Provider value={{ user, token, loading, login, logout, authFetch }}>
       {children}

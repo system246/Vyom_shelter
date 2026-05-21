@@ -34,6 +34,7 @@ const associateSchema = new mongoose.Schema(
       panNumber:     { type: String, required: true },
       aadhaarFile:   { type: String },
       panFile:       { type: String },
+      bankDocument:  { type: String }, // passbook/cheque
     },
 
     bank: {

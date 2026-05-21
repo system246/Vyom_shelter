@@ -12,8 +12,9 @@ export const submitAssociate = async (req, res, next) => {
     const referral     = parse(req.body.referral);
     const declaration  = parse(req.body.declaration);
 
-    if (req.files?.aadhaarFile?.[0]) documents.aadhaarFile = `aadhaarFile/${req.files.aadhaarFile[0].filename}`;
-    if (req.files?.panFile?.[0])     documents.panFile     = `panFile/${req.files.panFile[0].filename}`;
+    if (req.files?.aadhaarFile?.[0])  documents.aadhaarFile  = `aadhaarFile/${req.files.aadhaarFile[0].filename}`;
+    if (req.files?.panFile?.[0])      documents.panFile      = `panFile/${req.files.panFile[0].filename}`;
+    if (req.files?.bankDocument?.[0]) documents.bankDocument = `bankDocument/${req.files.bankDocument[0].filename}`;
 
     const associateId = generateAssociateId();
     const associate = await Associate.create({

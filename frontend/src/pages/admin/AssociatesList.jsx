@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Search, Eye, Trash2, RefreshCw, CheckCircle, XCircle, Clock, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Eye, Trash2, RefreshCw, CheckCircle, XCircle, Clock, X, ChevronLeft, ChevronRight, Download } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const STATUS = {
@@ -12,6 +12,21 @@ const STATUS = {
 const Badge = ({ s }) => {
   const cfg = STATUS[s] || STATUS.pending;
   const Icon = cfg.icon;
+  const exportCSV = () => {
+    const headers = ['ID','Name','Mobile','Email','Circle','Status','Submitted'];
+    const rows = list.map(a => [
+      a.associateId, a.personal?.fullName, a.personal?.mobile,
+      a.personal?.email, a.referral?.circle, a.status,
+      new Date(a.createdAt).toLocaleDateString('en-IN')
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${v||''}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = 'associates.csv'; a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${cfg.cls}`}>
       <Icon size={10} /> {s}
@@ -113,9 +128,10 @@ export default function AssociatesList() {
           <h1 className="text-xl font-bold text-[#1a3a5c]">Associates</h1>
           <p className="text-xs text-gray-400 mt-0.5">{total} total records</p>
         </div>
-        <button onClick={load} className="btn-ghost border border-gray-200">
-          <RefreshCw size={14} /> Refresh
-        </button>
+        <div className="flex gap-2">
+          <button onClick={exportCSV} className="btn-ghost border border-gray-200"><Download size={14}/> Export CSV</button>
+          <button onClick={load} className="btn-ghost border border-gray-200"><RefreshCw size={14}/> Refresh</button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -257,9 +273,9 @@ export default function AssociatesList() {
                   <Row label="Relation"     value={detail.professional?.nomineeRelation} />
                 </div>
                 <div>
-                 <p className="section-title">Documents</p>
-                  <Row label="Aadhaar No" value={detail.documents?.aadhaarNumber} />
-                  <Row label="PAN No"     value={detail.documents?.panNumber} />
+                  <p className="section-title">Documents</p>
+                  <Row label="Aadhaar No"   value={detail.documents?.aadhaarNumber} />
+                  <Row label="PAN No"       value={detail.documents?.panNumber} />
                   <div className="flex gap-3 mt-2">
                     {detail.documents?.aadhaarFile ? (
                       <a href={`${import.meta.env.VITE_API_URL?.replace('/api','') || ''}/uploads/${detail.documents.aadhaarFile}`}

@@ -24,6 +24,14 @@ const fileFilter = (req, file, cb) => {
 };
 
 const MAX = parseInt(process.env.MAX_FILE_SIZE_MB || '5');
+const multerInstance = multer({ storage, fileFilter, limits: { fileSize: MAX * 1024 * 1024 } });
 
-export const upload = multer({ storage, fileFilter, limits: { fileSize: MAX * 1024 * 1024 } })
-  .fields([{ name: 'aadhaarFile', maxCount: 1 }, { name: 'panFile', maxCount: 1 }]);
+// For associate registration (aadhaar + pan + bank doc)
+export const upload = multerInstance.fields([
+  { name: 'aadhaarFile',   maxCount: 1 },
+  { name: 'panFile',       maxCount: 1 },
+  { name: 'bankDocument',  maxCount: 1 },
+]);
+
+// For profile photo upload
+export const uploadPhoto = multerInstance.single('profilePhoto');
