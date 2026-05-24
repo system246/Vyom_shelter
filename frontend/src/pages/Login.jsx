@@ -17,9 +17,13 @@ export default function Login() {
     setLoading(true);
     try {
       const user = await login(email, password);
+      // If self-registered and not yet active → awaiting approval
+      if (user.isSelfRegistered && !user.isActive) {
+        navigate('/awaiting-approval');
+        return;
+      }
       toast.success(`Welcome back, ${user.profile.fullName}!`);
-      if (user.role === 'head_admin' || user.role === 'admin') navigate('/admin/dashboard');
-      else navigate('/my-profile');
+      navigate('/admin/dashboard');
     } catch (err) {
       toast.error(err.message);
     } finally { setLoading(false); }

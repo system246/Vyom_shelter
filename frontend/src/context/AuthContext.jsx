@@ -1,12 +1,11 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 
 const BASE = import.meta.env.VITE_API_URL || '/api';
-
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser]       = useState(null);
-  const [token, setToken]     = useState(() => localStorage.getItem('ap_token') || null);
+  const [user, setUser]   = useState(null);
+  const [token, setToken] = useState(() => localStorage.getItem('ap_token') || null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,6 +28,7 @@ export function AuthProvider({ children }) {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || 'Login failed');
+    // Store token and user regardless of pendingApproval — frontend gates the rest
     localStorage.setItem('ap_token', data.token);
     setToken(data.token);
     setUser(data.user);

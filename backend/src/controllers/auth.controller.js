@@ -115,10 +115,14 @@ export const login = async (req, res, next) => {
 
     if (!user.isVerified)
       return res.status(403).json({ success: false, message: 'Please verify your email first' });
-    if (!user.isActive)
-      return res.status(403).json({ success: false, message: 'Your account is pending admin approval' });
 
     const token = signToken(user._id);
+
+    // If not yet active (pending approval), still return token but flag it
+    if (!user.isActive) {
+      return res.json({ success: true, token, user: user.toJSON(), pendingApproval: true });
+    }
+
     res.json({ success: true, token, user: user.toJSON() });
   } catch (err) { next(err); }
 };

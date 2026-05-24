@@ -1,7 +1,6 @@
 import { verifyToken } from '../utils/jwt.js';
 import User from '../models/User.model.js';
 
-// Attach req.user from Bearer token
 export const protect = async (req, res, next) => {
   try {
     const auth = req.headers.authorization;
@@ -10,8 +9,13 @@ export const protect = async (req, res, next) => {
 
     const payload = verifyToken(auth.split(' ')[1]);
     const user = await User.findById(payload.id).select('-password');
-    if (!user || !user.isActive)
-      return res.status(401).json({ success: false, message: 'User not found or inactive' });
+    if (!user)
+      return res.status(401).json({ success: false, message: 'User not found' });
+
+    // Allow inactive self-registered users through (frontend gates them to awaiting-approval)
+    // Block only non-verified users
+    if (!user.isVerified)
+      return res.status(401).json({ success: false, message: 'Email not verified' });
 
     req.user = user;
     next();
@@ -20,16 +24,12 @@ export const protect = async (req, res, next) => {
   }
 };
 
-// Allow if user's primary role OR any of their extra roles is in the list
 export const allow = (...roles) => (req, res, next) => {
   const effectiveRoles = [req.user.role, ...(req.user.roles || [])];
-  const permitted = roles.some(r => effectiveRoles.includes(r));
-  if (!permitted)
+  if (!roles.some(r => effectiveRoles.includes(r)))
     return res.status(403).json({ success: false, message: 'Access denied' });
   next();
 };
 
-// Helper: check if req.user has a given role (including extra roles)
-export const hasRole = (user, role) => {
-  return user.role === role || (user.roles || []).includes(role);
-};
+export const hasRole = (user, role) =>
+  user.role === role || (user.roles || []).includes(role);
