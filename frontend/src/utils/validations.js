@@ -1,0 +1,43 @@
+import { z } from 'zod';
+
+export const personalSchema = z.object({
+  fullName:    z.string().min(2, 'Full name must be at least 2 characters'),
+  sdwo:        z.string().min(2, 'This field is required'),
+  dob:         z.string().min(1, 'Date of birth is required'),
+  gender:      z.enum(['male', 'female', 'other'], { required_error: 'Select a gender' }),
+  address:     z.string().min(10, 'Address must be at least 10 characters'),
+  pincode:     z.string().regex(/^\d{6}$/, 'Pincode must be 6 digits'),
+  mobile:      z.string().regex(/^\d{10}$/, 'Mobile must be 10 digits'),
+  whatsapp:    z.string().regex(/^\d{10}$/, 'WhatsApp must be 10 digits'),
+  email:       z.string().email('Enter a valid email address'),
+});
+
+export const professionalSchema = z.object({
+  profession:    z.string().min(2, 'Profession is required'),
+  education:     z.string().min(1, 'Select education level'),
+  nomineeName:   z.string().min(2, 'Nominee name is required'),
+  nomineeRelation: z.string().min(1, 'Select relation'),
+});
+
+export const documentSchema = z.object({
+  aadhaarNumber: z.string().regex(/^\d{12}$/, 'Aadhaar must be 12 digits'),
+  panNumber:     z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]$/, 'PAN format: ABCDE1234F'),
+});
+
+export const bankSchema = z.object({
+  bankName:      z.string().min(2, 'Bank name is required'),
+  branch:        z.string().min(2, 'Branch is required'),
+  ifscCode:      z.string().regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, 'Invalid IFSC code (e.g. SBIN0001234)'),
+  accountNumber: z.string().regex(/^\d{9,18}$/, 'Account number must be 9–18 digits'),
+});
+
+export const referralSchema = z.object({
+  associateRefNo:   z.string().min(1, 'Associate Ref No is required'),
+  associateName:    z.string().min(2, 'Associate name is required'),
+  circle:           z.string().min(2, 'Circle is required'),
+  newCandidateRefNo: z.string().min(1, 'New Candidate Referral No is required'),
+});
+
+export const declarationSchema = z.object({
+  acceptTerms: z.literal(true, { errorMap: () => ({ message: 'You must accept the terms & conditions' }) }),
+});
