@@ -56,7 +56,8 @@ const TreeNode = ({ node, onDelete, canDelete, level = 0 }) => {
 
 export default function UsersList() {
   const { user, authFetch } = useAuth();
-  const isHead = user?.role === 'head_admin';
+  const userRoles = [...new Set([user?.role, ...(user?.roles || [])])];
+  const isHead = userRoles.includes('head_admin');
   const [users, setUsers]     = useState([]);
   const [tree, setTree]       = useState([]);
   const [tab, setTab]         = useState('list');
@@ -104,7 +105,7 @@ export default function UsersList() {
         </div>
         <div className="flex gap-2">
           <button onClick={load} className="btn-ghost border border-gray-200"><RefreshCw size={14} /></button>
-          <Link to="/admin/users/create" className="btn-primary"><UserPlus size={14} /> Create User</Link>
+          {isHead && <Link to="/admin/users/create" className="btn-primary"><UserPlus size={14} /> Manage Admins</Link>}
         </div>
       </div>
 

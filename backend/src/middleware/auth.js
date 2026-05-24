@@ -20,9 +20,16 @@ export const protect = async (req, res, next) => {
   }
 };
 
-// Allow only specified roles
+// Allow if user's primary role OR any of their extra roles is in the list
 export const allow = (...roles) => (req, res, next) => {
-  if (!roles.includes(req.user.role))
+  const effectiveRoles = [req.user.role, ...(req.user.roles || [])];
+  const permitted = roles.some(r => effectiveRoles.includes(r));
+  if (!permitted)
     return res.status(403).json({ success: false, message: 'Access denied' });
   next();
+};
+
+// Helper: check if req.user has a given role (including extra roles)
+export const hasRole = (user, role) => {
+  return user.role === role || (user.roles || []).includes(role);
 };

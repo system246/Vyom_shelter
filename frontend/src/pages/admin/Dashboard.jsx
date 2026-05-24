@@ -29,7 +29,7 @@ export default function Dashboard() {
         const [aRes, uRes, pRes] = await Promise.all([
           authFetch('/api/associates'),
           user.role !== 'associate' ? authFetch('/api/users') : Promise.resolve(null),
-          user.role === 'head_admin' ? authFetch('/api/users?pending=true') : Promise.resolve(null),
+          _userRoles.includes('head_admin') ? authFetch('/api/users?pending=true') : Promise.resolve(null),
         ]);
         const aData = await aRes.json();
         const uData = uRes ? await uRes.json() : null;
@@ -46,8 +46,9 @@ export default function Dashboard() {
     load();
   }, []);
 
-  const isHead  = user?.role === 'head_admin';
-  const isAdmin = user?.role === 'admin';
+  const _userRoles = [...new Set([user?.role, ...(user?.roles || [])])];
+  const isHead  = _userRoles.includes('head_admin');
+  const isAdmin = _userRoles.includes('admin') || isHead;
 
   const pieData = stats ? [
     { name: 'Pending',  value: stats.pending  },

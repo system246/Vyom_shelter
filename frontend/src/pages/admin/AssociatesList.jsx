@@ -12,21 +12,6 @@ const STATUS = {
 const Badge = ({ s }) => {
   const cfg = STATUS[s] || STATUS.pending;
   const Icon = cfg.icon;
-  const exportCSV = () => {
-    const headers = ['ID','Name','Mobile','Email','Circle','Status','Submitted'];
-    const rows = list.map(a => [
-      a.associateId, a.personal?.fullName, a.personal?.mobile,
-      a.personal?.email, a.referral?.circle, a.status,
-      new Date(a.createdAt).toLocaleDateString('en-IN')
-    ]);
-    const csv = [headers, ...rows].map(r => r.map(v => `"${v||''}"`).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href = url; a.download = 'associates.csv'; a.click();
-    URL.revokeObjectURL(url);
-  };
-
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${cfg.cls}`}>
       <Icon size={10} /> {s}
@@ -41,9 +26,15 @@ const Row = ({ label, value }) => (
   </div>
 );
 
+// Returns effective role list (primary + extras)
+const effectiveRoles = (user) =>
+  user ? [...new Set([user.role, ...(user.roles || [])])] : [];
+
 export default function AssociatesList() {
   const { authFetch, user } = useAuth();
-  const isHead = user?.role === 'head_admin';
+  const userRoles = effectiveRoles(user);
+  const isHead  = userRoles.includes('head_admin');
+  const isAdmin = userRoles.includes('admin') || isHead;
 
   const [list, setList]       = useState([]);
   const [total, setTotal]     = useState(0);
@@ -72,6 +63,21 @@ export default function AssociatesList() {
   }, [page, status]);
 
   useEffect(() => { load(); }, [load]);
+
+  const exportCSV = () => {
+    const headers = ['ID','Name','Mobile','Email','Circle','Status','Submitted'];
+    const rows = list.map(a => [
+      a.associateId, a.personal?.fullName, a.personal?.mobile,
+      a.personal?.email, a.referral?.circle, a.status,
+      new Date(a.createdAt).toLocaleDateString('en-IN')
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${v||''}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = 'associates.csv'; a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const openDetail = async (associateId) => {
     setSelected(associateId);
@@ -129,7 +135,7 @@ export default function AssociatesList() {
           <p className="text-xs text-gray-400 mt-0.5">{total} total records</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={exportCSV} className="btn-ghost border border-gray-200"><Download size={14}/> Export CSV</button>
+          {isAdmin && <button onClick={exportCSV} className="btn-ghost border border-gray-200"><Download size={14}/> Export CSV</button>}
           <button onClick={load} className="btn-ghost border border-gray-200"><RefreshCw size={14}/> Refresh</button>
         </div>
       </div>
@@ -230,8 +236,8 @@ export default function AssociatesList() {
               <div className="p-12 text-center text-gray-400">Loading...</div>
             ) : detail ? (
               <div className="p-6 space-y-5">
-                {/* Status actions - head admin only */}
-                {isHead && (
+                {/* Status actions — head_admin OR admin (dual-role) */}
+                {isAdmin && (
                   <div className="flex gap-2 flex-wrap">
                     {['pending', 'approved', 'rejected'].map(s => (
                       <button
@@ -246,10 +252,12 @@ export default function AssociatesList() {
                         {s}
                       </button>
                     ))}
-                    <button onClick={() => handleDelete(detail.associateId)} disabled={updating}
-                      className="ml-auto px-3 py-1.5 rounded-lg text-xs font-medium border border-red-200 text-red-500 hover:bg-red-50 flex items-center gap-1">
-                      <Trash2 size={11} /> Delete
-                    </button>
+                    {isHead && (
+                      <button onClick={() => handleDelete(detail.associateId)} disabled={updating}
+                        className="ml-auto px-3 py-1.5 rounded-lg text-xs font-medium border border-red-200 text-red-500 hover:bg-red-50 flex items-center gap-1">
+                        <Trash2 size={11} /> Delete
+                      </button>
+                    )}
                   </div>
                 )}
 

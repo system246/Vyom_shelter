@@ -14,15 +14,23 @@ import IDCard            from '../pages/IDCard';
 import Dashboard         from '../pages/admin/Dashboard';
 import AssociatesList    from '../pages/admin/AssociatesList';
 import UsersList         from '../pages/admin/UsersList';
-import CreateUser        from '../pages/admin/CreateUser';
+import CreateAdmin       from '../pages/admin/CreateAdmin';
 import PendingApprovals  from '../pages/admin/PendingApprovals';
 import ActivityLog       from '../pages/admin/ActivityLog';
+
+// Returns all effective roles for a user (primary + extra granted roles)
+const effectiveRoles = (user) =>
+  user ? [...new Set([user.role, ...(user.roles || [])])] : [];
 
 const PrivateRoute = ({ children, roles }) => {
   const { user, loading } = useAuth();
   if (loading) return <div className="flex items-center justify-center min-h-[60vh] text-gray-400 text-sm">Loading...</div>;
   if (!user)   return <Navigate to="/login" replace />;
-  if (roles && !roles.includes(user.role)) return <Navigate to="/admin/dashboard" replace />;
+  if (roles) {
+    const userRoles = effectiveRoles(user);
+    const permitted = roles.some(r => userRoles.includes(r));
+    if (!permitted) return <Navigate to="/admin/dashboard" replace />;
+  }
   return children;
 };
 
@@ -51,7 +59,7 @@ export default function AppRoutes() {
       <Route path="/admin/dashboard"    element={<PrivateRoute><Dashboard /></PrivateRoute>} />
       <Route path="/admin/associates"   element={<PrivateRoute><AssociatesList /></PrivateRoute>} />
       <Route path="/admin/users"        element={<PrivateRoute roles={['head_admin','admin']}><UsersList /></PrivateRoute>} />
-      <Route path="/admin/users/create" element={<PrivateRoute roles={['head_admin','admin']}><CreateUser /></PrivateRoute>} />
+      <Route path="/admin/users/create" element={<PrivateRoute roles={['head_admin']}><CreateAdmin /></PrivateRoute>} />
       <Route path="/admin/pending"      element={<PrivateRoute roles={['head_admin']}><PendingApprovals /></PrivateRoute>} />
       <Route path="/admin/activity"     element={<PrivateRoute roles={['head_admin']}><ActivityLog /></PrivateRoute>} />
 
