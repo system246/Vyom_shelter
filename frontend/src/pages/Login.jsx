@@ -17,12 +17,8 @@ export default function Login() {
     setLoading(true);
     try {
       const user = await login(email, password);
-      // If self-registered and not yet active → awaiting approval
-      if (user.isSelfRegistered && !user.isActive) {
-        navigate('/awaiting-approval');
-        return;
-      }
-      toast.success(`Welcome back, ${user.profile.fullName}!`);
+      toast.success(`Welcome, ${user.profile.fullName}!`);
+      // AppRoutes handles redirecting based on user state
       navigate('/admin/dashboard');
     } catch (err) {
       toast.error(err.message);

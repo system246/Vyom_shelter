@@ -69,6 +69,7 @@ export const verifyOTP = async (req, res, next) => {
     }
 
     user.isVerified = true;
+    user.isActive   = true;  // Allow login immediately after email verify
     user.otp        = undefined;
     user.otpExpiry  = undefined;
     await user.save();
@@ -115,14 +116,10 @@ export const login = async (req, res, next) => {
 
     if (!user.isVerified)
       return res.status(403).json({ success: false, message: 'Please verify your email first' });
+    if (!user.isActive)
+      return res.status(403).json({ success: false, message: 'Account inactive. Please contact admin.' });
 
     const token = signToken(user._id);
-
-    // If not yet active (pending approval), still return token but flag it
-    if (!user.isActive) {
-      return res.json({ success: true, token, user: user.toJSON(), pendingApproval: true });
-    }
-
     res.json({ success: true, token, user: user.toJSON() });
   } catch (err) { next(err); }
 };

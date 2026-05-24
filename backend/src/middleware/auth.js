@@ -9,13 +9,8 @@ export const protect = async (req, res, next) => {
 
     const payload = verifyToken(auth.split(' ')[1]);
     const user = await User.findById(payload.id).select('-password');
-    if (!user)
-      return res.status(401).json({ success: false, message: 'User not found' });
-
-    // Allow inactive self-registered users through (frontend gates them to awaiting-approval)
-    // Block only non-verified users
-    if (!user.isVerified)
-      return res.status(401).json({ success: false, message: 'Email not verified' });
+    if (!user || !user.isActive)
+      return res.status(401).json({ success: false, message: 'User not found or inactive' });
 
     req.user = user;
     next();

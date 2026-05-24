@@ -28,11 +28,20 @@ export function AuthProvider({ children }) {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || 'Login failed');
-    // Store token and user regardless of pendingApproval — frontend gates the rest
     localStorage.setItem('ap_token', data.token);
     setToken(data.token);
     setUser(data.user);
     return data.user;
+  };
+
+  // Re-fetch user from /auth/me to get latest data (e.g. after form submit)
+  const refreshUser = async () => {
+    if (!token) return;
+    try {
+      const res  = await fetch(`${BASE}/auth/me`, { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      if (data.user) setUser(data.user);
+    } catch {}
   };
 
   const logout = () => {
@@ -45,7 +54,7 @@ export function AuthProvider({ children }) {
     fetch(url, { ...opts, headers: { ...opts.headers, Authorization: `Bearer ${token}` } });
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, authFetch }}>
+    <AuthContext.Provider value={{ user, token, loading, login, logout, authFetch, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

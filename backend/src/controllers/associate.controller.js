@@ -24,6 +24,12 @@ export const submitAssociate = async (req, res, next) => {
       createdByUser: req.user?._id || null,
     });
 
+    // Link associate record back to the user account
+    if (req.user?._id) {
+      const User = (await import('../models/User.model.js')).default;
+      await User.findByIdAndUpdate(req.user._id, { associateRecordId: associate.associateId });
+    }
+
     res.status(201).json({ success: true, message: 'Submitted successfully', associateId: associate.associateId });
   } catch (err) { next(err); }
 };
