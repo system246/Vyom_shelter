@@ -37,11 +37,11 @@ export default function Home() {
           Complete your associate registration in 7 simple steps. All data is saved automatically so you can continue where you left off.
         </p>
         <div className="flex gap-3 justify-center flex-wrap">
-          <Link to="/register" className="btn-primary text-base px-8 py-3 rounded-xl">
-            <UserPlus size={18} /> Start Registration
+          <Link to="/login" className="btn-primary text-base px-8 py-3 rounded-xl">
+            <UserPlus size={18} /> Get Started
           </Link>
-          <Link to="/report" className="btn-secondary text-base px-8 py-3 rounded-xl">
-            <BarChart2 size={18} /> View Reports
+          <Link to="/signup" className="btn-secondary text-base px-8 py-3 rounded-xl">
+            Create Account
           </Link>
         </div>
       </div>

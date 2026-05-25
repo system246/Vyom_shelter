@@ -23,13 +23,17 @@ export default function Dashboard() {
   const [stats, setStats]   = useState(null);
   const [pending, setPending] = useState(0);
 
+  const _userRoles = [...new Set([user?.role, ...(user?.roles || [])])];
+  const isHead  = _userRoles.includes('head_admin');
+  const isAdmin = _userRoles.includes('admin') || isHead;
+
   useEffect(() => {
     const load = async () => {
       try {
         const [aRes, uRes, pRes] = await Promise.all([
           authFetch('/api/associates'),
-          user.role !== 'associate' ? authFetch('/api/users') : Promise.resolve(null),
-          _userRoles.includes('head_admin') ? authFetch('/api/users?pending=true') : Promise.resolve(null),
+          isAdmin ? authFetch('/api/users') : Promise.resolve(null),
+          isHead  ? authFetch('/api/users?pending=true') : Promise.resolve(null),
         ]);
         const aData = await aRes.json();
         const uData = uRes ? await uRes.json() : null;
@@ -45,10 +49,6 @@ export default function Dashboard() {
     };
     load();
   }, []);
-
-  const _userRoles = [...new Set([user?.role, ...(user?.roles || [])])];
-  const isHead  = _userRoles.includes('head_admin');
-  const isAdmin = _userRoles.includes('admin') || isHead;
 
   const pieData = stats ? [
     { name: 'Pending',  value: stats.pending  },
@@ -124,7 +124,7 @@ export default function Dashboard() {
           </div>
         </Link>
 
-        {(isHead || isAdmin) && (
+        {isAdmin && !isHead && (
           <Link to="/register" className="card p-5 hover:shadow-md transition-shadow group">
             <div className="flex items-center justify-between">
               <div><p className="font-semibold text-gray-800 mb-1">New Registration</p><p className="text-xs text-gray-400">Register an associate</p></div>
@@ -142,10 +142,10 @@ export default function Dashboard() {
           </Link>
         )}
 
-        {(isHead || isAdmin) && (
+        {isHead && (
           <Link to="/admin/users/create" className="card p-5 hover:shadow-md transition-shadow group border-dashed border-2 border-gray-200">
             <div className="flex items-center justify-between">
-              <div><p className="font-semibold text-gray-800 mb-1">Create User</p><p className="text-xs text-gray-400">{isHead ? 'Add admin or associate' : 'Add associate'}</p></div>
+              <div><p className="font-semibold text-gray-800 mb-1">Manage Admins</p><p className="text-xs text-gray-400">Promote or remove admin access</p></div>
               <UserPlus size={18} className="text-gray-300 group-hover:text-[#1a3a5c] transition-colors" />
             </div>
           </Link>

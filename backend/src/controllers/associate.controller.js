@@ -118,10 +118,19 @@ export const updateStatus = async (req, res, next) => {
       }
     }
 
-    // On rejection, clear associateRecordId from user so they can re-submit
+    // On approval, mark user as associate-approved
+    if (status === 'approved') {
+      const User = (await import('../models/User.model.js')).default;
+      await User.findOneAndUpdate({ associateRecordId: req.params.id }, { isAssociateApproved: true });
+    }
+
+    // On rejection, clear associateRecordId so user can re-submit
     if (status === 'rejected') {
       const User = (await import('../models/User.model.js')).default;
-      await User.findOneAndUpdate({ associateRecordId: req.params.id }, { associateRecordId: null });
+      await User.findOneAndUpdate(
+        { associateRecordId: req.params.id },
+        { associateRecordId: null, isAssociateApproved: false }
+      );
     }
 
     const associate = await Associate.findOneAndUpdate(

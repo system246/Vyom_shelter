@@ -3,6 +3,15 @@ import { createContext, useContext, useState, useEffect } from 'react';
 const BASE = import.meta.env.VITE_API_URL || '/api';
 const AuthContext = createContext(null);
 
+// Build full URL: BASE is like 'https://api.render.com/api'
+// Pages call authFetch('/api/users') — strip the /api prefix to avoid doubling
+const buildUrl = (url) => {
+  if (url.startsWith('http')) return url;
+  // Remove leading /api since BASE already ends with /api
+  const path = url.startsWith('/api') ? url.slice(4) : url;
+  return `${BASE}${path}`;
+};
+
 export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null);
   const [token, setToken]     = useState(() => localStorage.getItem('ap_token') || null);
@@ -49,19 +58,14 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
-  // authFetch: attaches token, handles FormData vs JSON headers, resolves URL
   const authFetch = (url, opts = {}) => {
-    // Build absolute URL: if already absolute leave it, otherwise prepend BASE
-    const fullUrl = url.startsWith('http') ? url : `${BASE}${url}`;
-
+    const fullUrl = buildUrl(url);
     const headers = { Authorization: `Bearer ${token}` };
-    // Only set Content-Type for non-FormData bodies
     if (opts.body && !(opts.body instanceof FormData)) {
       headers['Content-Type'] = 'application/json';
     }
-    // Merge with any caller-provided headers (caller's Content-Type wins if set)
+    // Caller headers override defaults
     Object.assign(headers, opts.headers);
-
     return fetch(fullUrl, { ...opts, headers });
   };
 

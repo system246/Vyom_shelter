@@ -33,7 +33,7 @@ export default function MyProfile() {
   const [assocData, setAssocData] = useState(null);
 
   useEffect(() => {
-    if (user?.role === 'associate' && user?.associateRecordId) {
+    if (user?.associateRecordId) {
       authFetch(`/api/associates/${user.associateRecordId}`)
         .then(r => r.json()).then(d => { if (d.success) setAssocData(d.data); }).catch(() => {});
     }
@@ -113,9 +113,11 @@ export default function MyProfile() {
           </div>
           <div>
             <p className="font-semibold text-gray-800 text-lg">{user?.profile?.fullName}</p>
-            <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${ROLE_STYLE[user?.role]}`}>
-              {user?.role?.replace('_', ' ')}
-            </span>
+            {[...new Set([user?.role, ...(user?.roles || [])])].map(r => (
+              <span key={r} className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium capitalize mr-1 ${ROLE_STYLE[r] || 'bg-gray-100 text-gray-600'}`}>
+                {r?.replace('_', ' ')}
+              </span>
+            ))}
             {uploadingPhoto && <p className="text-xs text-blue-500 mt-1">Uploading...</p>}
           </div>
         </div>
@@ -172,6 +174,7 @@ export default function MyProfile() {
               { title: 'Referral', rows: [
                 ['Ref No', assocData.referral?.associateRefNo], ['Associate', assocData.referral?.associateName],
                 ['Circle', assocData.referral?.circle],
+                ['Your Candidate Ref No', assocData.referral?.newCandidateRefNo],
               ]},
             ].map(section => (
               <div key={section.title}>

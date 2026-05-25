@@ -45,7 +45,10 @@ export const getUsers = async (req, res, next) => {
     const { role, pending } = req.query;
     if (role) filter.role = role;
     if (pending === 'true' && hasRole(me, 'head_admin')) {
-      filter = { isVerified: true, isActive: false, isSelfRegistered: true };
+      // Find self-registered users who have submitted a form (associateRecordId set)
+      // The pending state is now tracked on the associate record, not the user
+      // We fetch users with associateRecordId and let frontend/associate API check status
+      filter = { isVerified: true, isSelfRegistered: true, associateRecordId: { $ne: null } };
     }
 
     const users = await User.find(filter)

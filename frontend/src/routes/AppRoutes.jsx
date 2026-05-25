@@ -7,7 +7,6 @@ import VerifyOTP         from '../pages/VerifyOTP';
 import ForgotPassword    from '../pages/ForgotPassword';
 import RegisterAssociate from '../pages/RegisterAssociate';
 import AwaitingApproval  from '../pages/AwaitingApproval';
-import Success           from '../pages/Success';
 import Report            from '../pages/Report';
 import NotFound          from '../pages/NotFound';
 import MyProfile         from '../pages/MyProfile';
@@ -19,33 +18,23 @@ import CreateAdmin       from '../pages/admin/CreateAdmin';
 import PendingApprovals  from '../pages/admin/PendingApprovals';
 import ActivityLog       from '../pages/admin/ActivityLog';
 
-const effectiveRoles = (user) =>
+export const effectiveRoles = (user) =>
   user ? [...new Set([user.role, ...(user.roles || [])])] : [];
 
-// Self-registered associate who hasn't submitted the form yet
-const needsForm = (user) =>
+// Self-registered user who hasn't submitted the form yet
+export const needsForm = (user) =>
   user?.isSelfRegistered && !user?.associateRecordId;
 
-// Self-registered associate who submitted form but pending approval
-const isPending = (user) =>
-  user?.isSelfRegistered && user?.associateRecordId && !user?.isApproved;
-
-// We store approval status on the user via a flag set after admin approves
-// For now use: isSelfRegistered + associateRecordId present = submitted, pending admin
-// After admin approves the associate form, we mark user.associateApproved = true (handled separately)
-// Simple check: if isSelfRegistered, no access to dashboard etc until head_admin approves
+// Self-registered user who submitted form but not yet approved
+export const isPending = (user) =>
+  user?.isSelfRegistered && user?.associateRecordId && !user?.isAssociateApproved;
 
 const PrivateRoute = ({ children, roles }) => {
   const { user, loading } = useAuth();
   if (loading) return <div className="flex items-center justify-center min-h-[60vh] text-gray-400 text-sm">Loading…</div>;
   if (!user)   return <Navigate to="/login" replace />;
-
-  // Must fill registration form first
-  if (needsForm(user)) return <Navigate to="/register" replace />;
-
-  // Form submitted but not yet approved — only allow /awaiting-approval
-  if (isPending(user)) return <Navigate to="/awaiting-approval" replace />;
-
+  if (needsForm(user))  return <Navigate to="/register" replace />;
+  if (isPending(user))  return <Navigate to="/awaiting-approval" replace />;
   if (roles) {
     const userRoles = effectiveRoles(user);
     if (!roles.some(r => userRoles.includes(r))) return <Navigate to="/admin/dashboard" replace />;
@@ -57,22 +46,19 @@ const PublicRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return children;
-  if (needsForm(user)) return <Navigate to="/register" replace />;
-  if (isPending(user)) return <Navigate to="/awaiting-approval" replace />;
+  if (needsForm(user))  return <Navigate to="/register" replace />;
+  if (isPending(user))  return <Navigate to="/awaiting-approval" replace />;
   return <Navigate to="/admin/dashboard" replace />;
 };
 
-// Register route — for self-registered users filling their form, or admins registering others
 const RegisterRoute = () => {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
-  // If already submitted and pending, go to awaiting
   if (isPending(user)) return <Navigate to="/awaiting-approval" replace />;
   return <RegisterAssociate />;
 };
 
-// Awaiting approval — only for pending self-registered users
 const ApprovalRoute = () => {
   const { user, loading } = useAuth();
   if (loading) return null;
@@ -90,7 +76,6 @@ export default function AppRoutes() {
       <Route path="/signup"          element={<PublicRoute><Signup /></PublicRoute>} />
       <Route path="/verify-otp"      element={<VerifyOTP />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/success"         element={<Success />} />
 
       <Route path="/awaiting-approval" element={<ApprovalRoute />} />
       <Route path="/register"          element={<RegisterRoute />} />
