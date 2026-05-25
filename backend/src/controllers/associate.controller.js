@@ -118,6 +118,12 @@ export const updateStatus = async (req, res, next) => {
       }
     }
 
+    // On rejection, clear associateRecordId from user so they can re-submit
+    if (status === 'rejected') {
+      const User = (await import('../models/User.model.js')).default;
+      await User.findOneAndUpdate({ associateRecordId: req.params.id }, { associateRecordId: null });
+    }
+
     const associate = await Associate.findOneAndUpdate(
       { associateId: req.params.id }, update, { new: true }
     );

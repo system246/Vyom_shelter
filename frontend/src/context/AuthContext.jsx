@@ -4,8 +4,8 @@ const BASE = import.meta.env.VITE_API_URL || '/api';
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser]   = useState(null);
-  const [token, setToken] = useState(() => localStorage.getItem('ap_token') || null);
+  const [user, setUser]       = useState(null);
+  const [token, setToken]     = useState(() => localStorage.getItem('ap_token') || null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -34,7 +34,6 @@ export function AuthProvider({ children }) {
     return data.user;
   };
 
-  // Re-fetch user from /auth/me to get latest data (e.g. after form submit)
   const refreshUser = async () => {
     if (!token) return;
     try {
@@ -50,8 +49,21 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
-  const authFetch = (url, opts = {}) =>
-    fetch(url, { ...opts, headers: { ...opts.headers, Authorization: `Bearer ${token}` } });
+  // authFetch: attaches token, handles FormData vs JSON headers, resolves URL
+  const authFetch = (url, opts = {}) => {
+    // Build absolute URL: if already absolute leave it, otherwise prepend BASE
+    const fullUrl = url.startsWith('http') ? url : `${BASE}${url}`;
+
+    const headers = { Authorization: `Bearer ${token}` };
+    // Only set Content-Type for non-FormData bodies
+    if (opts.body && !(opts.body instanceof FormData)) {
+      headers['Content-Type'] = 'application/json';
+    }
+    // Merge with any caller-provided headers (caller's Content-Type wins if set)
+    Object.assign(headers, opts.headers);
+
+    return fetch(fullUrl, { ...opts, headers });
+  };
 
   return (
     <AuthContext.Provider value={{ user, token, loading, login, logout, authFetch, refreshUser }}>
