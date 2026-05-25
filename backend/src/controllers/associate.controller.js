@@ -1,5 +1,5 @@
 import Associate from '../models/Associate.model.js';
-import { generateAssociateId } from '../utils/generateId.js';
+import { generateAssociateId, generateCandidateRefNo } from '../utils/generateId.js';
 import { hasRole } from '../middleware/auth.js';
 
 // POST /api/associates
@@ -108,8 +108,18 @@ export const updateStatus = async (req, res, next) => {
     if (!['pending', 'approved', 'rejected'].includes(status))
       return res.status(400).json({ success: false, message: 'Invalid status' });
 
+    const update = { status };
+
+    // On approval, generate a candidate ref no if not already set
+    if (status === 'approved') {
+      const existing = await Associate.findOne({ associateId: req.params.id });
+      if (existing && !existing.referral?.newCandidateRefNo) {
+        update['referral.newCandidateRefNo'] = generateCandidateRefNo();
+      }
+    }
+
     const associate = await Associate.findOneAndUpdate(
-      { associateId: req.params.id }, { status }, { new: true }
+      { associateId: req.params.id }, update, { new: true }
     );
     if (!associate) return res.status(404).json({ success: false, message: 'Not found' });
     res.json({ success: true, message: `Status → ${status}`, data: associate });
