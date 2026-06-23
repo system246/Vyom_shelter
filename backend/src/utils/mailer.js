@@ -1,15 +1,24 @@
 import nodemailer from 'nodemailer';
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_PASS,
-  },
-});
+// Built lazily on first actual send — never at module-import time. This
+// guarantees GMAIL_USER/GMAIL_PASS are read AFTER dotenv.config() has run,
+// regardless of which file imports mailer.js first or in what order.
+let transporter = null;
+const getTransporter = () => {
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_PASS,
+      },
+    });
+  }
+  return transporter;
+};
 
 export const sendOTP = async (email, otp, name) => {
-  await transporter.sendMail({
+  await getTransporter().sendMail({
     from: `"Associate Portal" <${process.env.GMAIL_USER}>`,
     to: email,
     subject: 'Your OTP for Verification',
@@ -30,7 +39,7 @@ export const sendOTP = async (email, otp, name) => {
 };
 
 export const sendWelcome = async (email, name, role) => {
-  await transporter.sendMail({
+  await getTransporter().sendMail({
     from: `"Associate Portal" <${process.env.GMAIL_USER}>`,
     to: email,
     subject: 'Welcome to Associate Portal!',
@@ -51,7 +60,7 @@ export const sendWelcome = async (email, name, role) => {
 };
 
 export const sendApprovalNotification = async (email, name) => {
-  await transporter.sendMail({
+  await getTransporter().sendMail({
     from: `"Associate Portal" <${process.env.GMAIL_USER}>`,
     to: email,
     subject: 'Your Account Has Been Approved!',

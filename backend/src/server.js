@@ -1,6 +1,8 @@
+import dotenv from 'dotenv';
+dotenv.config(); // must run before any route/controller import that reads process.env at load time
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import connectDB from './utils/db.js';
@@ -12,7 +14,6 @@ import activityRoutes     from './routes/activity.routes.js';
 import propertyRoutes     from './routes/property.routes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
-dotenv.config();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 
