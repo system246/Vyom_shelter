@@ -26,6 +26,7 @@ export default function Navbar() {
   if (!user) {
     links.push(...publicLinks);
   } else {
+    links.push({ to: '/', label: 'View Site', icon: Home });
     links.push({ to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard });
     links.push({ to: '/admin/properties', label: 'Properties', icon: Building2 });
     links.push({ to: '/admin/enquiries', label: 'Enquiries', icon: MessageSquare });
@@ -51,9 +52,20 @@ export default function Navbar() {
     <nav className="glass-nav text-white sticky top-0 z-50 shadow-lg">
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <Link to={user ? '/admin/dashboard' : '/'} className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg overflow-hidden bg-white flex items-center justify-center flex-shrink-0">
-              <img src={logo} alt="Vyom Shelter" className="w-full h-full object-contain" />
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="relative">
+              {/* soft glow halo behind the glass chip */}
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#ffb648]/40 to-[#2563a8]/40 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="relative w-14 h-14 rounded-2xl overflow-hidden flex items-center justify-center flex-shrink-0
+                              bg-white/10 backdrop-blur-md border border-white/25 shadow-[0_4px_16px_-2px_rgba(0,0,0,0.3)]
+                              ring-1 ring-white/10 p-1.5 transition-all duration-300 group-hover:bg-white/15 group-hover:scale-105">
+                <img
+                  src={logo}
+                  alt="Vyom Shelter"
+                  className="w-full h-full object-cover object-center"
+                  style={{ objectPosition: "center 35%" }}
+                />
+              </div>
             </div>
             <div>
               <p className="font-semibold text-white leading-tight text-sm">Vyom Shelter</p>
@@ -67,7 +79,7 @@ export default function Navbar() {
             {links.map(({ to, label, icon: Icon }) => (
               <Link key={to} to={to}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  active(to) ? 'bg-white/20 text-white' : 'text-blue-100 hover:bg-white/10 hover:text-white'
+                  active(to) ? 'bg-white/15 backdrop-blur-sm border border-white/20 text-white shadow-sm' : 'text-blue-100 hover:bg-white/10 hover:text-white'
                 }`}>
                 <Icon size={15} /> {label}
               </Link>
