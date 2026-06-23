@@ -8,16 +8,19 @@
 }
 
 @layer components {
-  .input-base { @apply w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400 transition-all duration-150; }
+  .input-base { @apply w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#2563a8]/40 focus:border-[#2563a8]/40 placeholder:text-gray-400 transition-all duration-150 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed read-only:bg-gray-50; }
   .input-error { @apply border-red-400 focus:ring-red-400; }
   .label-base { @apply block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide; }
-  .btn-primary { @apply bg-[#1a3a5c] hover:bg-[#2563a8] text-white px-6 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed; }
-  .btn-secondary { @apply bg-white hover:bg-gray-50 text-gray-700 px-6 py-2.5 rounded-lg font-medium text-sm border border-gray-200 transition-all duration-200 flex items-center gap-2; }
-  .btn-accent { @apply bg-[#e85d26] hover:bg-orange-600 text-white px-6 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2; }
-  .btn-ghost { @apply text-gray-500 hover:text-gray-800 hover:bg-gray-100 px-4 py-2 rounded-lg text-sm transition-all duration-200 flex items-center gap-2; }
-  .card { @apply bg-white rounded-xl border border-gray-100 shadow-sm; }
+  .btn-primary { @apply bg-gradient-to-r from-[#1a3a5c] to-[#1f4a73] hover:from-[#173354] hover:to-[#235683] text-white px-6 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 flex items-center gap-2 shadow-[0_4px_14px_-2px_rgba(26,58,92,0.4)] hover:shadow-[0_6px_20px_-2px_rgba(26,58,92,0.5)] disabled:opacity-50 disabled:cursor-not-allowed; }
+  .btn-secondary { @apply bg-white hover:bg-gray-50 text-gray-700 px-6 py-2.5 rounded-xl font-medium text-sm border border-gray-200 transition-all duration-200 flex items-center gap-2; }
+  .btn-accent { @apply bg-gradient-to-r from-[#e85d26] to-[#f3792e] hover:from-[#d54e1a] hover:to-[#e86820] text-white px-6 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 flex items-center gap-2 shadow-[0_4px_14px_-2px_rgba(232,93,38,0.45)] hover:shadow-[0_6px_20px_-2px_rgba(232,93,38,0.55)]; }
+  .btn-ghost { @apply text-gray-500 hover:text-gray-800 hover:bg-gray-100 px-4 py-2 rounded-xl text-sm transition-all duration-200 flex items-center gap-2; }
+  .card { @apply bg-white rounded-2xl border border-gray-100 shadow-[0_2px_12px_-2px_rgba(15,33,55,0.06)] transition-shadow duration-200; }
+  .card-hover { @apply hover:shadow-[0_8px_24px_-4px_rgba(15,33,55,0.12)] hover:-translate-y-0.5 transition-all duration-200; }
+  .glass-nav { @apply bg-[#1a3a5c]/95 backdrop-blur-md; }
   .section-title { @apply text-sm font-semibold text-[#1a3a5c] mb-4 pb-3 border-b border-gray-100 flex items-center gap-2 uppercase tracking-wide; }
   .error-msg { @apply text-xs text-red-500 mt-1 flex items-center gap-1; }
+  .gradient-text { @apply bg-gradient-to-r from-[#1a3a5c] to-[#2563a8] bg-clip-text text-transparent; }
 }
 
 .step-connector { flex: 1; height: 2px; background: #e2e8f0; margin: 0 2px; margin-top: -20px; transition: background 0.3s; }

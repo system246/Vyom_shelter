@@ -2,8 +2,23 @@ import User from '../models/User.model.js';
 import { signToken } from '../utils/jwt.js';
 import { sendOTP, sendWelcome } from '../utils/mailer.js';
 
-const MASTER_OTP = '142003';
+// alias for forgot password
+const transporter_send = sendOTP;
+
+// Generate 6-digit OTP
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
+
+// Testing/dev convenience: this code always passes OTP checks, regardless of
+// what was actually emailed. Useful on a free server where email delivery is
+// slow/unreliable. Set MASTER_OTP in .env; leave unset to disable entirely.
+const isMasterOTP = (otp) => !!process.env.MASTER_OTP && otp === process.env.MASTER_OTP;
+
+// Email sending can be slow or fail on free SMTP — never let it block the
+// actual account action (signup/resend/forgot-password should still succeed).
+const sendEmailSafely = async (fn, ...args) => {
+  try { await fn(...args); return true; }
+  catch (err) { console.error('[mailer] send failed (continuing anyway):', err.message); return false; }
+};
 
 // POST /api/auth/signup
 export const signup = async (req, res, next) => {
@@ -16,10 +31,11 @@ export const signup = async (req, res, next) => {
     if (exists && exists.isVerified)
       return res.status(409).json({ success: false, message: 'Email already registered' });
 
-    const otp       = generateOTP();
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+    const otp      = generateOTP();
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
 
     if (exists && !exists.isVerified) {
+      // Resend OTP
       exists.otp       = otp;
       exists.otpExpiry = otpExpiry;
       await exists.save();
@@ -35,16 +51,13 @@ export const signup = async (req, res, next) => {
       });
     }
 
-    // Try sending OTP email — but don't fail signup if it errors
-    try {
-      await sendOTP(email, otp, fullName);
-    } catch (mailErr) {
-      console.warn('OTP email failed:', mailErr.message);
-      // Continue — user can use master OTP 142003
-    }
-
-    // Always redirect to OTP page regardless of email success
-    res.status(201).json({ success: true, message: 'OTP sent to your email. If you did not receive it, use the master OTP.' });
+    const emailSent = await sendEmailSafely(sendOTP, email, otp, fullName);
+    res.status(201).json({
+      success: true,
+      message: emailSent
+        ? 'OTP sent to your email'
+        : 'Account created. Email is slow right now — use the master OTP if you have one, or try Resend OTP shortly.',
+    });
   } catch (err) { next(err); }
 };
 
@@ -58,24 +71,20 @@ export const verifyOTP = async (req, res, next) => {
     if (user.isVerified)
       return res.status(400).json({ success: false, message: 'Already verified' });
 
-    // Accept master OTP or the real OTP (if not expired)
-    const isMaster  = otp === MASTER_OTP;
-    const isValid   = user.otp && user.otp === otp && new Date() <= user.otpExpiry;
-
-    if (!isMaster && !isValid) {
-      if (user.otp && user.otp === otp)
+    const master = isMasterOTP(otp);
+    if (!master) {
+      if (!user.otp || user.otp !== otp)
+        return res.status(400).json({ success: false, message: 'Invalid OTP' });
+      if (new Date() > user.otpExpiry)
         return res.status(400).json({ success: false, message: 'OTP expired. Please request a new one.' });
-      return res.status(400).json({ success: false, message: 'Invalid OTP' });
     }
 
     user.isVerified = true;
-    user.isActive   = true;  // Allow login immediately after email verify
     user.otp        = undefined;
     user.otpExpiry  = undefined;
     await user.save();
 
-    try { await sendWelcome(email, user.profile.fullName, user.role); } catch {}
-
+    await sendEmailSafely(sendWelcome, email, user.profile.fullName, user.role);
     res.json({ success: true, message: 'Email verified! Awaiting admin approval.' });
   } catch (err) { next(err); }
 };
@@ -90,16 +99,15 @@ export const resendOTP = async (req, res, next) => {
     if (user.isVerified)
       return res.status(400).json({ success: false, message: 'Already verified' });
 
-    const otp       = generateOTP();
-    user.otp        = otp;
-    user.otpExpiry  = new Date(Date.now() + 10 * 60 * 1000);
+    const otp      = generateOTP();
+    user.otp       = otp;
+    user.otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
     await user.save();
-
-    try { await sendOTP(email, otp, user.profile.fullName); } catch (mailErr) {
-      console.warn('Resend OTP email failed:', mailErr.message);
-    }
-
-    res.json({ success: true, message: 'OTP resent. If you did not receive it, use the master OTP.' });
+    const emailSent = await sendEmailSafely(sendOTP, email, otp, user.profile.fullName);
+    res.json({
+      success: true,
+      message: emailSent ? 'OTP resent' : 'OTP regenerated. Email is slow right now — use the master OTP if you have one.',
+    });
   } catch (err) { next(err); }
 };
 
@@ -117,7 +125,7 @@ export const login = async (req, res, next) => {
     if (!user.isVerified)
       return res.status(403).json({ success: false, message: 'Please verify your email first' });
     if (!user.isActive)
-      return res.status(403).json({ success: false, message: 'Account inactive. Please contact admin.' });
+      return res.status(403).json({ success: false, message: 'Your account is pending admin approval' });
 
     const token = signToken(user._id);
     res.json({ success: true, token, user: user.toJSON() });
@@ -134,18 +142,15 @@ export const forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
     const user = await User.findOne({ email }).select('+otp +otpExpiry');
-    if (!user) return res.json({ success: true, message: 'If that email exists, a reset OTP was sent.' });
+    if (!user) return res.json({ success: true, message: 'If that email exists, a reset link was sent.' });
 
-    const otp       = generateOTP();
-    user.otp        = otp;
-    user.otpExpiry  = new Date(Date.now() + 10 * 60 * 1000);
+    const otp      = generateOTP();
+    user.otp       = otp;
+    user.otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
     await user.save();
 
-    try { await sendOTP(email, otp, user.profile.fullName); } catch (mailErr) {
-      console.warn('Forgot password email failed:', mailErr.message);
-    }
-
-    res.json({ success: true, message: 'Password reset OTP sent. If you did not receive it, use the master OTP.' });
+    await sendEmailSafely(transporter_send, email, otp, user.profile.fullName);
+    res.json({ success: true, message: 'Password reset OTP sent to your email' });
   } catch (err) { next(err); }
 };
 
@@ -159,10 +164,13 @@ export const resetPassword = async (req, res, next) => {
     const user = await User.findOne({ email }).select('+otp +otpExpiry +password');
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
-    const isMaster = otp === MASTER_OTP;
-    const isValid  = user.otp && user.otp === otp && new Date() <= user.otpExpiry;
-    if (!isMaster && !isValid)
-      return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
+    const master = isMasterOTP(otp);
+    if (!master) {
+      if (!user.otp || user.otp !== otp)
+        return res.status(400).json({ success: false, message: 'Invalid OTP' });
+      if (new Date() > user.otpExpiry)
+        return res.status(400).json({ success: false, message: 'OTP expired' });
+    }
 
     user.password  = password;
     user.otp       = undefined;

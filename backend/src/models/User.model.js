@@ -10,12 +10,6 @@ const userSchema = new mongoose.Schema(
       enum: ['head_admin', 'admin', 'associate'],
       required: true,
     },
-    // Extra roles granted on top of primary role (e.g. associate promoted to admin keeps both)
-    roles: {
-      type: [String],
-      enum: ['head_admin', 'admin', 'associate'],
-      default: [],
-    },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     profile: {
       fullName:    { type: String, required: true, trim: true },
@@ -23,20 +17,15 @@ const userSchema = new mongoose.Schema(
       photoUrl:    { type: String, default: null },
     },
     associateRecordId: { type: String, default: null },
-    isActive:   { type: Boolean, default: false },
-    isVerified: { type: Boolean, default: false },
+    isActive:   { type: Boolean, default: false }, // false until head_admin approves
+    isVerified: { type: Boolean, default: false }, // false until OTP verified
     otp:        { type: String, select: false },
     otpExpiry:  { type: Date,   select: false },
-    isSelfRegistered:     { type: Boolean, default: false },
-    isAssociateApproved:  { type: Boolean, default: false },
+    // self-signup flag
+    isSelfRegistered: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
-
-// Virtual: all effective roles (primary + extra)
-userSchema.virtual('effectiveRoles').get(function () {
-  return [...new Set([this.role, ...(this.roles || [])])];
-});
 
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
@@ -49,12 +38,7 @@ userSchema.methods.matchPassword = async function (entered) {
 };
 
 userSchema.set('toJSON', {
-  transform: (_, obj) => {
-    delete obj.password; delete obj.otp; delete obj.otpExpiry;
-    // Expose effectiveRoles as a flat array so frontend can use it
-    obj.effectiveRoles = [...new Set([obj.role, ...(obj.roles || [])])];
-    return obj;
-  },
+  transform: (_, obj) => { delete obj.password; delete obj.otp; delete obj.otpExpiry; return obj; },
 });
 
 export default mongoose.model('User', userSchema);

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import BackButton from '../../components/ui/BackButton';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { UserPlus, Eye, EyeOff } from 'lucide-react';
@@ -47,6 +48,7 @@ export default function CreateUser() {
 
   return (
     <div className="max-w-xl mx-auto px-4 py-8">
+      <BackButton />
       <div className="mb-6">
         <h1 className="text-xl font-bold text-[#1a3a5c]">Create User</h1>
         <p className="text-sm text-gray-400 mt-1">

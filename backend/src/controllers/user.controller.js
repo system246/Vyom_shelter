@@ -1,7 +1,6 @@
 import { log, notify } from '../utils/activity.js';
 import User from '../models/User.model.js';
 import { sendApprovalNotification } from '../utils/mailer.js';
-import { hasRole } from '../middleware/auth.js';
 
 // POST /api/users
 export const createUser = async (req, res, next) => {
@@ -11,17 +10,17 @@ export const createUser = async (req, res, next) => {
 
     if (role === 'head_admin')
       return res.status(403).json({ success: false, message: 'Cannot create another head admin' });
-    if (role === 'admin' && !hasRole(creator, 'head_admin'))
+    if (role === 'admin' && creator.role !== 'head_admin')
       return res.status(403).json({ success: false, message: 'Only head admin can create admins' });
-    if (role === 'associate' && !hasRole(creator, 'head_admin') && !hasRole(creator, 'admin'))
+    if (role === 'associate' && !['head_admin', 'admin'].includes(creator.role))
       return res.status(403).json({ success: false, message: 'No permission to create associates' });
 
     const user = await User.create({
       email, password, role,
       profile: profile || { fullName: email },
       createdBy:  creator._id,
-      isVerified: true,
-      isActive:   true,
+      isVerified: true,  // admin-created users are pre-verified
+      isActive:   true,  // admin-created users are pre-approved
     });
 
     res.status(201).json({ success: true, message: `${role} created`, user });
@@ -34,9 +33,9 @@ export const getUsers = async (req, res, next) => {
     const me = req.user;
     let filter = {};
 
-    if (hasRole(me, 'head_admin')) {
+    if (me.role === 'head_admin') {
       filter = { _id: { $ne: me._id } };
-    } else if (hasRole(me, 'admin')) {
+    } else if (me.role === 'admin') {
       filter = { createdBy: me._id };
     } else {
       return res.json({ success: true, data: [me] });
@@ -44,11 +43,9 @@ export const getUsers = async (req, res, next) => {
 
     const { role, pending } = req.query;
     if (role) filter.role = role;
-    if (pending === 'true' && hasRole(me, 'head_admin')) {
-      // Find self-registered users who have submitted a form (associateRecordId set)
-      // The pending state is now tracked on the associate record, not the user
-      // We fetch users with associateRecordId and let frontend/associate API check status
-      filter = { isVerified: true, isSelfRegistered: true, associateRecordId: { $ne: null } };
+    // head_admin can see pending self-registered users
+    if (pending === 'true' && me.role === 'head_admin') {
+      filter = { isVerified: true, isActive: false, isSelfRegistered: true };
     }
 
     const users = await User.find(filter)
@@ -56,74 +53,6 @@ export const getUsers = async (req, res, next) => {
       .sort({ createdAt: -1 });
 
     res.json({ success: true, data: users });
-  } catch (err) { next(err); }
-};
-
-// GET /api/users/associates-list  — associates eligible for promotion (head_admin only)
-export const getAssociateUsers = async (req, res, next) => {
-  try {
-    if (!hasRole(req.user, 'head_admin'))
-      return res.status(403).json({ success: false, message: 'Only head admin can access this' });
-
-    const { search = '' } = req.query;
-    const filter = {
-      role: 'associate',
-      isActive: true,
-    };
-    if (search) {
-      filter.$or = [
-        { 'profile.fullName': { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } },
-      ];
-    }
-
-    const users = await User.find(filter)
-      .select('profile email role roles createdAt')
-      .sort({ 'profile.fullName': 1 });
-
-    res.json({ success: true, data: users });
-  } catch (err) { next(err); }
-};
-
-// POST /api/users/:id/promote  — head_admin promotes associate → gains admin role too
-export const promoteToAdmin = async (req, res, next) => {
-  try {
-    if (!hasRole(req.user, 'head_admin'))
-      return res.status(403).json({ success: false, message: 'Only head admin can promote users' });
-
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
-
-    if (user.role !== 'associate')
-      return res.status(400).json({ success: false, message: 'Only associates can be promoted to admin' });
-
-    if (user.roles?.includes('admin'))
-      return res.status(400).json({ success: false, message: 'User is already an admin' });
-
-    // Add 'admin' to extra roles — keeps primary role as 'associate'
-    user.roles = [...new Set([...(user.roles || []), 'admin'])];
-    await user.save();
-
-    await log('PROMOTE_USER', req.user._id, 'User', user._id, user.profile.fullName, 'Promoted to admin (dual role)');
-    await notify(user._id, 'You have been promoted!', 'You now have admin permissions in addition to your associate role.', 'success', '/admin/dashboard');
-
-    res.json({ success: true, message: `${user.profile.fullName} promoted to admin`, user });
-  } catch (err) { next(err); }
-};
-
-// POST /api/users/:id/demote  — head_admin removes admin role from associate
-export const demoteFromAdmin = async (req, res, next) => {
-  try {
-    if (!hasRole(req.user, 'head_admin'))
-      return res.status(403).json({ success: false, message: 'Only head admin can demote users' });
-
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
-
-    user.roles = (user.roles || []).filter(r => r !== 'admin');
-    await user.save();
-
-    res.json({ success: true, message: `${user.profile.fullName} demoted`, user });
   } catch (err) { next(err); }
 };
 
@@ -136,7 +65,7 @@ export const getUserById = async (req, res, next) => {
 
     if (me.role === 'associate' && me._id.toString() !== req.params.id)
       return res.status(403).json({ success: false, message: 'Access denied' });
-    if (me.role === 'admin' && !hasRole(me, 'head_admin')) {
+    if (me.role === 'admin') {
       const isOwn   = me._id.toString() === req.params.id;
       const isChild = user.createdBy?._id?.toString() === me._id.toString();
       if (!isOwn && !isChild) return res.status(403).json({ success: false, message: 'Access denied' });
@@ -155,7 +84,7 @@ export const updateUser = async (req, res, next) => {
     const user = await User.findById(req.params.id).select('+password');
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
-    if (me.role === 'admin' && !hasRole(me, 'head_admin')) {
+    if (me.role === 'admin') {
       const isChild = user.createdBy?.toString() === me._id.toString();
       const isSelf  = me._id.toString() === req.params.id;
       if (!isChild && !isSelf) return res.status(403).json({ success: false, message: 'Access denied' });
@@ -166,10 +95,12 @@ export const updateUser = async (req, res, next) => {
     if (profile)  user.profile = { ...user.profile, ...profile };
     if (password) user.password = password;
 
-    if (isActive !== undefined && hasRole(me, 'head_admin')) {
+    // Head admin approving a pending user
+    if (isActive !== undefined && me.role === 'head_admin') {
       const wasInactive = !user.isActive;
       user.isActive = isActive;
       await user.save();
+      // Send approval email if just approved
       if (isActive && wasInactive) {
         try { await sendApprovalNotification(user.email, user.profile.fullName); } catch {}
         await log('APPROVE_USER', me._id, 'User', user._id, user.profile.fullName, 'Account approved');
@@ -186,7 +117,7 @@ export const updateUser = async (req, res, next) => {
 // DELETE /api/users/:id
 export const deleteUser = async (req, res, next) => {
   try {
-    if (!hasRole(req.user, 'head_admin'))
+    if (req.user.role !== 'head_admin')
       return res.status(403).json({ success: false, message: 'Only head admin can delete users' });
     const user = await User.findByIdAndDelete(req.params.id);
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
@@ -199,10 +130,10 @@ export const getUserTree = async (req, res, next) => {
   try {
     const me       = req.user;
     const targetId = me.role === 'associate' ? me._id : req.params.id;
-    const direct   = await User.find({ createdBy: targetId }).select('profile email role roles createdAt isActive');
+    const direct   = await User.find({ createdBy: targetId }).select('profile email role createdAt isActive');
     const tree = await Promise.all(
       direct.map(async (child) => {
-        const grandchildren = await User.find({ createdBy: child._id }).select('profile email role roles createdAt isActive');
+        const grandchildren = await User.find({ createdBy: child._id }).select('profile email role createdAt isActive');
         return { ...child.toJSON(), children: grandchildren };
       })
     );
@@ -210,7 +141,7 @@ export const getUserTree = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-// POST /api/users/:id/photo
+// POST /api/users/:id/photo — upload profile photo
 export const uploadProfilePhoto = async (req, res, next) => {
   try {
     if (!req.file)
@@ -219,7 +150,8 @@ export const uploadProfilePhoto = async (req, res, next) => {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
-    if (req.user._id.toString() !== req.params.id && !hasRole(req.user, 'head_admin'))
+    // Only self or head_admin can update photo
+    if (req.user._id.toString() !== req.params.id && req.user.role !== 'head_admin')
       return res.status(403).json({ success: false, message: 'Access denied' });
 
     user.profile.photoUrl = `profilePhoto/${req.file.filename}`;

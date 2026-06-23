@@ -19,8 +19,8 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  const allowed = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
-  allowed.includes(file.mimetype) ? cb(null, true) : cb(new Error('Only JPG, PNG, WEBP, PDF allowed'));
+  const allowed = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'video/mp4', 'video/quicktime', 'video/webm'];
+  allowed.includes(file.mimetype) ? cb(null, true) : cb(new Error('Only JPG, PNG, WEBP, PDF, MP4 allowed'));
 };
 
 const MAX = parseInt(process.env.MAX_FILE_SIZE_MB || '5');
@@ -35,3 +35,15 @@ export const upload = multerInstance.fields([
 
 // For profile photo upload
 export const uploadPhoto = multerInstance.single('profilePhoto');
+
+// For property listing (seller upload: images, video, documents)
+export const uploadProperty = multerInstance.fields([
+  { name: 'images',         maxCount: 10 },
+  { name: 'video',          maxCount: 1 },
+  { name: 'saleDeed',       maxCount: 1 },
+  { name: 'khataKhasra',    maxCount: 1 },
+  { name: 'registry',       maxCount: 1 },
+  { name: 'taxReceipt',     maxCount: 1 },
+  { name: 'ownershipProof', maxCount: 1 },
+  { name: 'encumbranceCertificate', maxCount: 1 },
+]);

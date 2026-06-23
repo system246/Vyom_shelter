@@ -1,6 +1,7 @@
 import { verifyToken } from '../utils/jwt.js';
 import User from '../models/User.model.js';
 
+// Attach req.user from Bearer token
 export const protect = async (req, res, next) => {
   try {
     const auth = req.headers.authorization;
@@ -19,12 +20,9 @@ export const protect = async (req, res, next) => {
   }
 };
 
+// Allow only specified roles
 export const allow = (...roles) => (req, res, next) => {
-  const effectiveRoles = [req.user.role, ...(req.user.roles || [])];
-  if (!roles.some(r => effectiveRoles.includes(r)))
+  if (!roles.includes(req.user.role))
     return res.status(403).json({ success: false, message: 'Access denied' });
   next();
 };
-
-export const hasRole = (user, role) =>
-  user.role === role || (user.roles || []).includes(role);

@@ -1,16 +1,8 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 
 const BASE = import.meta.env.VITE_API_URL || '/api';
-const AuthContext = createContext(null);
 
-// Build full URL: BASE is like 'https://api.render.com/api'
-// Pages call authFetch('/api/users') — strip the /api prefix to avoid doubling
-const buildUrl = (url) => {
-  if (url.startsWith('http')) return url;
-  // Remove leading /api since BASE already ends with /api
-  const path = url.startsWith('/api') ? url.slice(4) : url;
-  return `${BASE}${path}`;
-};
+const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null);
@@ -43,34 +35,17 @@ export function AuthProvider({ children }) {
     return data.user;
   };
 
-  const refreshUser = async () => {
-    if (!token) return;
-    try {
-      const res  = await fetch(`${BASE}/auth/me`, { headers: { Authorization: `Bearer ${token}` } });
-      const data = await res.json();
-      if (data.user) setUser(data.user);
-    } catch {}
-  };
-
   const logout = () => {
     localStorage.removeItem('ap_token');
     setToken(null);
     setUser(null);
   };
 
-  const authFetch = (url, opts = {}) => {
-    const fullUrl = buildUrl(url);
-    const headers = { Authorization: `Bearer ${token}` };
-    if (opts.body && !(opts.body instanceof FormData)) {
-      headers['Content-Type'] = 'application/json';
-    }
-    // Caller headers override defaults
-    Object.assign(headers, opts.headers);
-    return fetch(fullUrl, { ...opts, headers });
-  };
+  const authFetch = (url, opts = {}) =>
+    fetch(url, { ...opts, headers: { ...opts.headers, Authorization: `Bearer ${token}` } });
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, authFetch, refreshUser }}>
+    <AuthContext.Provider value={{ user, token, loading, login, logout, authFetch }}>
       {children}
     </AuthContext.Provider>
   );

@@ -58,15 +58,9 @@ export default function VerifyOTP() {
         body: JSON.stringify({ email, otp: code }),
       });
       const data = await res.json();
-
-      // "Already verified" means OTP was already done — still move forward
-      if (res.ok || data.message === 'Already verified') {
-        toast.success('Email verified! Awaiting admin approval.');
-        navigate('/login');
-        return;
-      }
-
-      throw new Error(data.message);
+      if (!res.ok) throw new Error(data.message);
+      toast.success('Email verified! Awaiting admin approval.');
+      navigate('/login');
     } catch (err) { toast.error(err.message); }
     finally { setLoading(false); }
   };
@@ -101,11 +95,8 @@ export default function VerifyOTP() {
             We sent a 6-digit OTP to<br />
             <span className="font-medium text-gray-700">{email}</span>
           </p>
-          <p className="text-xs text-amber-600 mt-2 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
-            If OTP email didn't arrive, use master OTP: <b>142003</b>
-          </p>
 
-          <form onSubmit={handleSubmit} className="mt-6">
+          <form onSubmit={handleSubmit} className="mt-8">
             <div className="flex gap-2 justify-center mb-6" onPaste={handlePaste}>
               {otp.map((digit, i) => (
                 <input

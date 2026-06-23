@@ -30,8 +30,7 @@ export const markRead = async (req, res, next) => {
 // GET /api/activity-log (head_admin only)
 export const getActivityLog = async (req, res, next) => {
   try {
-    const roles = [req.user.role, ...(req.user.roles || [])];
-    if (!roles.includes('head_admin'))
+    if (req.user.role !== 'head_admin')
       return res.status(403).json({ success: false, message: 'Access denied' });
     const logs = await ActivityLog.find()
       .populate('performedBy', 'profile.fullName email role')

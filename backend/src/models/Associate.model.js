@@ -45,11 +45,11 @@ const associateSchema = new mongoose.Schema(
     },
 
     referral: {
-      associateRefNo:    { type: String, default: '' },
-      associateName:     { type: String, default: '' },
-      circle:            { type: String, default: '' },
-      // Generated after approval by head_admin/admin
-      newCandidateRefNo: { type: String, default: '' },
+      associateRefNo:    { type: String, required: true },
+      associateName:     { type: String, required: true },
+      circle:            { type: String, required: true },
+      newCandidateRefNo: { type: String, required: true },
+      isDirect:          { type: Boolean, default: false }, // true = no referrer, registered under Head Office
     },
 
     declaration: {

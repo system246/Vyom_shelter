@@ -17,9 +17,9 @@ export default function Login() {
     setLoading(true);
     try {
       const user = await login(email, password);
-      toast.success(`Welcome, ${user.profile.fullName}!`);
-      // AppRoutes handles redirecting based on user state
-      navigate('/admin/dashboard');
+      toast.success(`Welcome back, ${user.profile.fullName}!`);
+      if (user.role === 'head_admin' || user.role === 'admin') navigate('/admin/dashboard');
+      else navigate('/my-profile');
     } catch (err) {
       toast.error(err.message);
     } finally { setLoading(false); }

@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import BackButton from '../../components/ui/BackButton';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { UserPlus, Trash2, RefreshCw, ChevronDown, ChevronRight, Search } from 'lucide-react';
@@ -56,8 +57,7 @@ const TreeNode = ({ node, onDelete, canDelete, level = 0 }) => {
 
 export default function UsersList() {
   const { user, authFetch } = useAuth();
-  const userRoles = [...new Set([user?.role, ...(user?.roles || [])])];
-  const isHead = userRoles.includes('head_admin');
+  const isHead = user?.role === 'head_admin';
   const [users, setUsers]     = useState([]);
   const [tree, setTree]       = useState([]);
   const [tab, setTab]         = useState('list');
@@ -96,6 +96,7 @@ export default function UsersList() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
+      <BackButton />
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-bold text-[#1a3a5c]">
@@ -105,7 +106,7 @@ export default function UsersList() {
         </div>
         <div className="flex gap-2">
           <button onClick={load} className="btn-ghost border border-gray-200"><RefreshCw size={14} /></button>
-          {isHead && <Link to="/admin/users/create" className="btn-primary"><UserPlus size={14} /> Manage Admins</Link>}
+          <Link to="/admin/users/create" className="btn-primary"><UserPlus size={14} /> Create User</Link>
         </div>
       </div>
 

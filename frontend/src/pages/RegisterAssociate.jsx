@@ -17,7 +17,7 @@ const INITIAL = { personal: {}, professional: {}, documents: {}, bank: {}, refer
 
 export default function RegisterAssociate() {
   const navigate      = useNavigate();
-  const { authFetch, refreshUser } = useAuth();
+  const { authFetch } = useAuth();
   const [step, setStep]           = useState(1);
   const [formData, setFormData]   = useState(INITIAL);
   const [submitting, setSubmitting] = useState(false);
@@ -77,9 +77,7 @@ export default function RegisterAssociate() {
     try {
       const result = await submitAssociate(formData, authFetch);
       clearDraft();
-      // Refresh user in context so associateRecordId is updated
-      await refreshUser();
-      navigate('/awaiting-approval');
+      navigate('/success', { state: { associateId: result.associateId, name: formData.personal?.fullName } });
     } catch (err) {
       toast.error(err.message || 'Submission failed. Please try again.');
     } finally { setSubmitting(false); }
