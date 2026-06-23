@@ -68,7 +68,6 @@ export default function ReviewSubmit({ data, onPrev, onSubmit, onEdit, submittin
       <Section title="Referral Details" onEdit={() => onEdit(5)}>
         <Row label="Ref No"       value={referral?.associateRefNo} />
         <Row label="Associate"    value={referral?.associateName} />
-        <Row label="Circle"       value={referral?.circle} />
         <Row label="Candidate Ref" value={referral?.newCandidateRefNo} />
       </Section>
 

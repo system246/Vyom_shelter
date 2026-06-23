@@ -35,9 +35,15 @@ export default function MyProfile() {
   const [assocData, setAssocData] = useState(null);
 
   useEffect(() => {
-    if (user?.role === 'associate' && user?.associateRecordId) {
+    if (user?.role !== 'associate') return;
+    if (user?.associateRecordId) {
       authFetch(`/api/associates/${user.associateRecordId}`)
         .then(r => r.json()).then(d => { if (d.success) setAssocData(d.data); }).catch(() => {});
+    } else {
+      // Fallback for accounts that submitted before associateRecordId linking existed —
+      // /api/associates is already scoped server-side to "records I created".
+      authFetch(`/api/associates?limit=1`)
+        .then(r => r.json()).then(d => { if (d.success && d.data?.[0]) setAssocData(d.data[0]); }).catch(() => {});
     }
   }, [user]);
 
@@ -198,7 +204,6 @@ export default function MyProfile() {
               ]},
               { title: 'Referral', rows: [
                 ['Ref No', assocData.referral?.associateRefNo], ['Associate', assocData.referral?.associateName],
-                ['Circle', assocData.referral?.circle],
               ]},
             ].map(section => (
               <div key={section.title}>

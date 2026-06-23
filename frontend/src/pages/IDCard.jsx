@@ -15,6 +15,9 @@ export default function IDCard() {
     if (user?.associateRecordId) {
       authFetch(`/api/associates/${user.associateRecordId}`)
         .then(r => r.json()).then(d => { if (d.success) setAssoc(d.data); }).catch(() => {});
+    } else if (user?.role === 'associate') {
+      authFetch(`/api/associates?limit=1`)
+        .then(r => r.json()).then(d => { if (d.success && d.data?.[0]) setAssoc(d.data[0]); }).catch(() => {});
     }
   }, [user]);
 
@@ -77,8 +80,6 @@ export default function IDCard() {
                     <span className="text-xs text-gray-700">{data.mobile || user?.profile?.mobile || '—'}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-400 w-16">Circle</span>
-                    <span className="text-xs text-gray-700">{refData.circle || '—'}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-gray-400 w-16">Status</span>

@@ -34,7 +34,6 @@ export const bankSchema = z.object({
 export const referralSchema = z.object({
   associateRefNo:   z.string().min(1, 'Associate Ref No is required'),
   associateName:    z.string().min(2, 'Associate name is required'),
-  circle:           z.string().min(2, 'Circle is required'),
   newCandidateRefNo: z.string().min(1, 'New Candidate Referral No is required'),
   isDirect:         z.boolean().optional(),
 });

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import NotificationBell from './NotificationBell';
 import toast from 'react-hot-toast';
+import logo from '../../assets/logo.png';
 
 export default function Navbar() {
   const [open, setOpen]   = useState(false);
@@ -31,10 +32,10 @@ export default function Navbar() {
     if (user.role !== 'associate') {
       links.push({ to: '/admin/associates', label: 'Associates', icon: Users });
       links.push({ to: '/admin/users', label: user.role === 'head_admin' ? 'Users' : 'My Team', icon: UserPlus });
-    } else {
-      links.push({ to: '/admin/associates', label: 'My Associates', icon: Users });
     }
-    if (user.role !== 'associate') links.push({ to: '/register', label: 'Register', icon: UserPlus });
+    // Everyone gets the Register link — associates fill their own form here;
+    // admin/head_admin use it to register a walk-in associate on someone's behalf.
+    links.push({ to: '/register', label: 'Register', icon: UserPlus });
     if (user.role === 'head_admin') links.push({ to: '/admin/pending', label: 'Approvals', icon: UserCheck });
     links.push({ to: '/my-profile', label: 'Profile', icon: User });
   }
@@ -51,7 +52,9 @@ export default function Navbar() {
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link to={user ? '/admin/dashboard' : '/'} className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-[#e85d26] rounded-lg flex items-center justify-center font-bold text-white text-lg">V</div>
+            <div className="w-10 h-10 rounded-lg overflow-hidden bg-white flex items-center justify-center flex-shrink-0">
+              <img src={logo} alt="Vyom Shelter" className="w-full h-full object-contain" />
+            </div>
             <div>
               <p className="font-semibold text-white leading-tight text-sm">Vyom Shelter</p>
               <p className="text-[10px] text-blue-200 leading-tight capitalize">

@@ -47,8 +47,9 @@ const associateSchema = new mongoose.Schema(
     referral: {
       associateRefNo:    { type: String, required: true },
       associateName:     { type: String, required: true },
-      circle:            { type: String, required: true },
-      newCandidateRefNo: { type: String, required: true },
+      // Generated only when head_admin approves this record — null until then,
+      // so a rejected applicant never holds a working referral code.
+      newCandidateRefNo: { type: String, default: null },
       isDirect:          { type: Boolean, default: false }, // true = no referrer, registered under Head Office
     },
 

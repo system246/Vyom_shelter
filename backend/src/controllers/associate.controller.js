@@ -23,6 +23,14 @@ export const submitAssociate = async (req, res, next) => {
       createdByUser: req.user?._id || null,
     });
 
+    // Link the User account to this record so My Profile / ID Card can show
+    // it — but only when the associate is submitting their own form, not
+    // when an admin is registering a walk-in associate on someone's behalf.
+    if (req.user?.role === 'associate' && !req.user.associateRecordId) {
+      req.user.associateRecordId = associateId;
+      await req.user.save();
+    }
+
     res.status(201).json({ success: true, message: 'Submitted successfully', associateId: associate.associateId });
   } catch (err) { next(err); }
 };
@@ -76,8 +84,19 @@ export const updateStatus = async (req, res, next) => {
     if (!['pending', 'approved', 'rejected'].includes(status))
       return res.status(400).json({ success: false, message: 'Invalid status' });
 
+    const update = { status };
+    // The candidate's own referral code is only created the moment they're
+    // approved — a rejected/pending applicant should never hold a working
+    // code they could hand out to someone else.
+    if (status === 'approved') {
+      const existing = await Associate.findOne({ associateId: req.params.id });
+      if (existing && !existing.referral?.newCandidateRefNo) {
+        update['referral.newCandidateRefNo'] = generateCandidateRefNo();
+      }
+    }
+
     const associate = await Associate.findOneAndUpdate(
-      { associateId: req.params.id }, { status }, { new: true }
+      { associateId: req.params.id }, update, { new: true }
     );
     if (!associate) return res.status(404).json({ success: false, message: 'Not found' });
     res.json({ success: true, message: `Status → ${status}`, data: associate });

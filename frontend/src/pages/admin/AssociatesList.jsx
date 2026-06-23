@@ -109,10 +109,10 @@ export default function AssociatesList() {
   );
 
   const exportCSV = () => {
-    const headers = ['ID','Name','Mobile','Email','Circle','Status','Submitted'];
+    const headers = ['ID','Name','Mobile','Email','Status','Submitted'];
     const rows = list.map(a => [
       a.associateId, a.personal?.fullName, a.personal?.mobile,
-      a.personal?.email, a.referral?.circle, a.status,
+      a.personal?.email, a.status,
       new Date(a.createdAt).toLocaleDateString('en-IN')
     ]);
     const csv = [headers, ...rows].map(r => r.map(v => `"${v||''}"`).join(',')).join('\n');
@@ -167,7 +167,7 @@ export default function AssociatesList() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50">
-                  {['ID', 'Name', 'Mobile', 'Email', 'Circle', 'Status', 'Actions'].map(h => (
+                  {['ID', 'Name', 'Mobile', 'Email', 'Status', 'Actions'].map(h => (
                     <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">{h}</th>
                   ))}
                 </tr>
@@ -179,7 +179,6 @@ export default function AssociatesList() {
                     <td className="px-4 py-3 text-sm font-medium text-gray-800">{a.personal?.fullName}</td>
                     <td className="px-4 py-3 text-sm text-gray-500">{a.personal?.mobile}</td>
                     <td className="px-4 py-3 text-sm text-gray-500 max-w-[160px] truncate">{a.personal?.email}</td>
-                    <td className="px-4 py-3 text-sm text-gray-500">{a.referral?.circle}</td>
                     <td className="px-4 py-3"><Badge s={a.status} /></td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
@@ -307,7 +306,6 @@ export default function AssociatesList() {
                   <p className="section-title">Referral</p>
                   <Row label="Ref No"       value={detail.referral?.associateRefNo} />
                   <Row label="Associate"    value={detail.referral?.associateName} />
-                  <Row label="Circle"       value={detail.referral?.circle} />
                   <Row label="Candidate Ref" value={detail.referral?.newCandidateRefNo} />
                 </div>
                 <div>

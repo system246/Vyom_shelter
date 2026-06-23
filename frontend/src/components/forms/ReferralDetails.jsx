@@ -13,7 +13,6 @@ export default function ReferralDetails({ data, onNext, onPrev }) {
     defaultValues: {
       associateRefNo: '',
       associateName: '',
-      circle: '',
       // Auto-generated once and reused — the candidate never has to invent this themselves
       newCandidateRefNo: generateCandidateRefNo(),
       isDirect: false,
@@ -23,13 +22,11 @@ export default function ReferralDetails({ data, onNext, onPrev }) {
 
   const isDirect = watch('isDirect');
 
-  // When toggling "no referrer", fill the referrer fields with the Head Office code
-  // and remember whatever the user had typed, so unchecking restores it.
+  // When toggling "no referrer", fill the referrer fields with the Head Office code.
   useEffect(() => {
     if (isDirect) {
       setValue('associateRefNo', HEAD_REFERRAL_CODE);
       setValue('associateName', HEAD_REFERRAL_NAME);
-      if (!watch('circle')) setValue('circle', 'Head Office');
     }
   }, [isDirect]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -60,12 +57,6 @@ export default function ReferralDetails({ data, onNext, onPrev }) {
             disabled={isDirect}
             error={errors.associateName?.message}
             {...register('associateName')}
-          />
-          <InputField
-            label="Circle" required
-            placeholder="e.g. North Delhi, Mumbai West"
-            error={errors.circle?.message}
-            {...register('circle')}
           />
           <InputField
             label="Your Referral Code"
