@@ -59,7 +59,7 @@ export default function VerifyOTP() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
-      toast.success('Email verified! Awaiting admin approval.');
+      toast.success('Email verified! You can log in now.');
       navigate('/login');
     } catch (err) { toast.error(err.message); }
     finally { setLoading(false); }

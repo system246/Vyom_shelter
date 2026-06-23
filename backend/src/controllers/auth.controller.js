@@ -46,7 +46,11 @@ export const signup = async (req, res, next) => {
         profile: { fullName, mobile: mobile || '' },
         otp, otpExpiry,
         isVerified:       false,
-        isActive:         false,
+        // No head-admin gate before login anymore — approval now only applies
+        // to the actual Associate registration record (pending/approved/
+        // rejected), not to basic account access. Verifying the OTP is enough
+        // to log in; filling the 7-step form is what gets reviewed.
+        isActive:         true,
         isSelfRegistered: true,
       });
     }
@@ -85,7 +89,7 @@ export const verifyOTP = async (req, res, next) => {
     await user.save();
 
     await sendEmailSafely(sendWelcome, email, user.profile.fullName, user.role);
-    res.json({ success: true, message: 'Email verified! Awaiting admin approval.' });
+    res.json({ success: true, message: 'Email verified! You can log in now.' });
   } catch (err) { next(err); }
 };
 

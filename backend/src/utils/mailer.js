@@ -46,11 +46,11 @@ export const sendWelcome = async (email, name, role) => {
     html: `
       <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;border:1px solid #e5e7eb;border-radius:12px">
         <h2 style="color:#1a3a5c;margin-bottom:8px">Welcome, ${name}! 🎉</h2>
-        <p style="color:#6b7280">Your account has been <b>verified</b> and is pending approval by the administrator.</p>
-        <p style="color:#6b7280">You will be notified once your account is approved and you can access the portal.</p>
+        <p style="color:#6b7280">Your email has been <b>verified</b> — you can log in right away.</p>
+        <p style="color:#6b7280">Next, complete the Associate Registration form. That submission is what our team reviews and approves.</p>
         <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;margin:24px 0">
-          <p style="color:#15803d;margin:0;font-size:14px">✅ Email verified successfully</p>
-          <p style="color:#15803d;margin:4px 0 0;font-size:14px">⏳ Awaiting admin approval</p>
+          <p style="color:#15803d;margin:0;font-size:14px">✅ Email verified — you can log in now</p>
+          <p style="color:#15803d;margin:4px 0 0;font-size:14px">📝 Complete your Associate Registration to get approved</p>
         </div>
         <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/>
         <p style="color:#9ca3af;font-size:12px">Associate Portal · Secure Registration System</p>
