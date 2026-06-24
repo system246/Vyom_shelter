@@ -5,15 +5,24 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      // In dev, /api/* is forwarded to Express — no CORS issues
       '/api': {
         target: 'http://localhost:5000',
         changeOrigin: true,
       },
-      // Also proxy /uploads so file previews work in dev
       '/uploads': {
         target: 'http://localhost:5000',
         changeOrigin: true,
+      },
+    },
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'charts':       ['recharts'],
+          'icons':        ['lucide-react'],
+        },
       },
     },
   },

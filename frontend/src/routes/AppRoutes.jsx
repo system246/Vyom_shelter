@@ -1,31 +1,37 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import Home              from '../pages/Home';
-import Login             from '../pages/Login';
-import Signup            from '../pages/Signup';
-import VerifyOTP         from '../pages/VerifyOTP';
-import ForgotPassword    from '../pages/ForgotPassword';
-import RegisterAssociate from '../pages/RegisterAssociate';
-import Success           from '../pages/Success';
-import Report            from '../pages/Report';
-import NotFound          from '../pages/NotFound';
-import MyProfile         from '../pages/MyProfile';
-import IDCard            from '../pages/IDCard';
-import Dashboard         from '../pages/admin/Dashboard';
-import AssociatesList    from '../pages/admin/AssociatesList';
-import UsersList         from '../pages/admin/UsersList';
-import CreateUser        from '../pages/admin/CreateUser';
-import PendingApprovals  from '../pages/admin/PendingApprovals';
-import ActivityLog       from '../pages/admin/ActivityLog';
-import PropertiesAdmin   from '../pages/admin/PropertiesAdmin';
-import EnquiriesAdmin    from '../pages/admin/EnquiriesAdmin';
-import Properties        from '../pages/properties/Properties';
-import PropertyDetail    from '../pages/properties/PropertyDetail';
-import ListProperty      from '../pages/properties/ListProperty';
+
+const Home              = lazy(() => import('../pages/Home'));
+const Login             = lazy(() => import('../pages/Login'));
+const Signup            = lazy(() => import('../pages/Signup'));
+const VerifyOTP         = lazy(() => import('../pages/VerifyOTP'));
+const ForgotPassword    = lazy(() => import('../pages/ForgotPassword'));
+const RegisterAssociate = lazy(() => import('../pages/RegisterAssociate'));
+const Success           = lazy(() => import('../pages/Success'));
+const Report            = lazy(() => import('../pages/Report'));
+const NotFound          = lazy(() => import('../pages/NotFound'));
+const MyProfile         = lazy(() => import('../pages/MyProfile'));
+const IDCard            = lazy(() => import('../pages/IDCard'));
+const Dashboard         = lazy(() => import('../pages/admin/Dashboard'));
+const AssociatesList    = lazy(() => import('../pages/admin/AssociatesList'));
+const UsersList         = lazy(() => import('../pages/admin/UsersList'));
+const CreateUser        = lazy(() => import('../pages/admin/CreateUser'));
+const PendingApprovals  = lazy(() => import('../pages/admin/PendingApprovals'));
+const ActivityLog       = lazy(() => import('../pages/admin/ActivityLog'));
+const PropertiesAdmin   = lazy(() => import('../pages/admin/PropertiesAdmin'));
+const EnquiriesAdmin    = lazy(() => import('../pages/admin/EnquiriesAdmin'));
+const Properties        = lazy(() => import('../pages/properties/Properties'));
+const PropertyDetail    = lazy(() => import('../pages/properties/PropertyDetail'));
+const ListProperty      = lazy(() => import('../pages/properties/ListProperty'));
+
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-[60vh] text-gray-400 text-sm">Loading...</div>
+);
 
 const PrivateRoute = ({ children, roles }) => {
   const { user, loading } = useAuth();
-  if (loading) return <div className="flex items-center justify-center min-h-[60vh] text-gray-400 text-sm">Loading...</div>;
+  if (loading) return <PageLoader />;
   if (!user)   return <Navigate to="/login" replace />;
   if (roles && !roles.includes(user.role)) return <Navigate to="/admin/dashboard" replace />;
   return children;
@@ -40,35 +46,37 @@ const PublicRoute = ({ children }) => {
 
 export default function AppRoutes() {
   return (
-    <Routes>
-      <Route path="/"              element={<Home />} />
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        <Route path="/"              element={<Home />} />
 
-      {/* Public property flows — Buy / Sell / Rent — NO login required */}
-      <Route path="/properties"      element={<Properties />} />
-      <Route path="/properties/:id"  element={<PropertyDetail />} />
-      <Route path="/sell"            element={<ListProperty />} />
+        {/* Public property flows — Buy / Sell / Rent — NO login required */}
+        <Route path="/properties"      element={<Properties />} />
+        <Route path="/properties/:id"  element={<PropertyDetail />} />
+        <Route path="/sell"            element={<ListProperty />} />
 
-      <Route path="/login"         element={<PublicRoute><Login /></PublicRoute>} />
-      <Route path="/signup"        element={<PublicRoute><Signup /></PublicRoute>} />
-      <Route path="/verify-otp"    element={<VerifyOTP />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/success"       element={<Success />} />
+        <Route path="/login"         element={<PublicRoute><Login /></PublicRoute>} />
+        <Route path="/signup"        element={<PublicRoute><Signup /></PublicRoute>} />
+        <Route path="/verify-otp"    element={<VerifyOTP />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/success"       element={<Success />} />
 
-      <Route path="/register"      element={<PrivateRoute roles={['head_admin','admin']}><RegisterAssociate /></PrivateRoute>} />
-      <Route path="/report"        element={<PrivateRoute><Report /></PrivateRoute>} />
-      <Route path="/my-profile"    element={<PrivateRoute><MyProfile /></PrivateRoute>} />
-      <Route path="/id-card"       element={<PrivateRoute><IDCard /></PrivateRoute>} />
+        <Route path="/register"      element={<PrivateRoute roles={['head_admin','admin']}><RegisterAssociate /></PrivateRoute>} />
+        <Route path="/report"        element={<PrivateRoute><Report /></PrivateRoute>} />
+        <Route path="/my-profile"    element={<PrivateRoute><MyProfile /></PrivateRoute>} />
+        <Route path="/id-card"       element={<PrivateRoute><IDCard /></PrivateRoute>} />
 
-      <Route path="/admin/dashboard"    element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-      <Route path="/admin/associates"   element={<PrivateRoute><AssociatesList /></PrivateRoute>} />
-      <Route path="/admin/users"        element={<PrivateRoute roles={['head_admin','admin']}><UsersList /></PrivateRoute>} />
-      <Route path="/admin/users/create" element={<PrivateRoute roles={['head_admin','admin']}><CreateUser /></PrivateRoute>} />
-      <Route path="/admin/pending"      element={<PrivateRoute roles={['head_admin']}><PendingApprovals /></PrivateRoute>} />
-      <Route path="/admin/activity"     element={<PrivateRoute roles={['head_admin']}><ActivityLog /></PrivateRoute>} />
-      <Route path="/admin/properties"   element={<PrivateRoute><PropertiesAdmin /></PrivateRoute>} />
-      <Route path="/admin/enquiries"    element={<PrivateRoute><EnquiriesAdmin /></PrivateRoute>} />
+        <Route path="/admin/dashboard"    element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+        <Route path="/admin/associates"   element={<PrivateRoute><AssociatesList /></PrivateRoute>} />
+        <Route path="/admin/users"        element={<PrivateRoute roles={['head_admin','admin']}><UsersList /></PrivateRoute>} />
+        <Route path="/admin/users/create" element={<PrivateRoute roles={['head_admin','admin']}><CreateUser /></PrivateRoute>} />
+        <Route path="/admin/pending"      element={<PrivateRoute roles={['head_admin']}><PendingApprovals /></PrivateRoute>} />
+        <Route path="/admin/activity"     element={<PrivateRoute roles={['head_admin']}><ActivityLog /></PrivateRoute>} />
+        <Route path="/admin/properties"   element={<PrivateRoute><PropertiesAdmin /></PrivateRoute>} />
+        <Route path="/admin/enquiries"    element={<PrivateRoute><EnquiriesAdmin /></PrivateRoute>} />
 
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Suspense>
   );
 }

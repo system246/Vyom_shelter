@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Allow: /properties
+Allow: /sell
+
+Disallow: /admin/
+Disallow: /api/
+Disallow: /my-profile
+Disallow: /id-card
+Disallow: /register
+Disallow: /report
+Disallow: /verify-otp
+Disallow: /forgot-password
+
+Sitemap: https://vyomshelter.com/sitemap.xml

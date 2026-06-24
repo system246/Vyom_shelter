@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import BackButton from '../../components/ui/BackButton';
 import { useAuth } from '../../context/AuthContext';
 import { Search, Eye, Trash2, RefreshCw, CheckCircle, XCircle, Clock, X, ChevronLeft, ChevronRight, Download } from 'lucide-react';
@@ -100,13 +100,12 @@ export default function AssociatesList() {
     } catch (err) { toast.error(err.message); }
   };
 
-  // Local search filter
-  const filtered = list.filter(a =>
+  const filtered = useMemo(() => list.filter(a =>
     !search ||
     a.personal?.fullName?.toLowerCase().includes(search.toLowerCase()) ||
     a.associateId?.toLowerCase().includes(search.toLowerCase()) ||
     a.personal?.mobile?.includes(search)
-  );
+  ), [list, search]);
 
   const exportCSV = () => {
     const headers = ['ID','Name','Mobile','Email','Status','Submitted'];
