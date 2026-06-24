@@ -9,7 +9,8 @@ import { PROPERTY_TYPE_LABELS, PROPERTY_STATUS_LABELS } from '../../utils/consta
 const TABS = ['pending', 'approved', 'rejected', 'sold', 'rented'];
 
 export default function PropertiesAdmin() {
-  const { authFetch } = useAuth();
+  const { authFetch, user } = useAuth();
+  const canModify = user?.role === 'head_admin' || user?.role === 'admin';
   const [tab, setTab] = useState('pending');
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -92,23 +93,25 @@ export default function PropertiesAdmin() {
                 <p className="text-xs text-gray-400 mt-1">Seller: {p.seller?.name} · {p.seller?.mobile}</p>
                 <p className="text-[10px] text-gray-400 mt-0.5 font-mono">{p.propertyId}</p>
               </div>
-              <div className="flex sm:flex-col gap-2 flex-shrink-0 justify-end">
-                {tab === 'pending' && (
-                  <>
-                    <button onClick={() => act(p.propertyId, 'approved')} className="flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-green-50 text-green-700 border border-green-200 hover:bg-green-100">
-                      <CheckCircle size={13} /> Approve
+              {canModify && (
+                <div className="flex sm:flex-col gap-2 flex-shrink-0 justify-end">
+                  {tab === 'pending' && (
+                    <>
+                      <button onClick={() => act(p.propertyId, 'approved')} className="flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-green-50 text-green-700 border border-green-200 hover:bg-green-100">
+                        <CheckCircle size={13} /> Approve
+                      </button>
+                      <button onClick={() => act(p.propertyId, 'rejected')} className="flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-red-50 text-red-600 border border-red-200 hover:bg-red-100">
+                        <XCircle size={13} /> Reject
+                      </button>
+                    </>
+                  )}
+                  {tab === 'approved' && (
+                    <button onClick={() => toggleFeatured(p.propertyId, p.featured)} className={`flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium border ${p.featured ? 'bg-orange-50 text-orange-600 border-orange-200' : 'bg-white text-gray-600 border-gray-200'}`}>
+                      <Star size={13} /> {p.featured ? 'Featured' : 'Make Featured'}
                     </button>
-                    <button onClick={() => act(p.propertyId, 'rejected')} className="flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-red-50 text-red-600 border border-red-200 hover:bg-red-100">
-                      <XCircle size={13} /> Reject
-                    </button>
-                  </>
-                )}
-                {tab === 'approved' && (
-                  <button onClick={() => toggleFeatured(p.propertyId, p.featured)} className={`flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium border ${p.featured ? 'bg-orange-50 text-orange-600 border-orange-200' : 'bg-white text-gray-600 border-gray-200'}`}>
-                    <Star size={13} /> {p.featured ? 'Featured' : 'Make Featured'}
-                  </button>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>

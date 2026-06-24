@@ -81,9 +81,10 @@ export default function AssociatesList() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
-      toast.success(`Status updated to ${newStatus}`);
+      // Update UI only after confirmed success — no optimistic update
       setDetail(d => d ? { ...d, status: newStatus } : d);
       setList(l => l.map(a => a.associateId === associateId ? { ...a, status: newStatus } : a));
+      toast.success(`Status updated to ${newStatus}`);
     } catch (err) { toast.error(err.message); }
     finally { setUpdating(false); }
   };

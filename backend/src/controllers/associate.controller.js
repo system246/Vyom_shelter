@@ -1,5 +1,5 @@
 import Associate from '../models/Associate.model.js';
-import { generateAssociateId } from '../utils/generateId.js';
+import { generateAssociateId, generateCandidateRefNo } from '../utils/generateId.js';
 
 // POST /api/associates
 export const submitAssociate = async (req, res, next) => {
