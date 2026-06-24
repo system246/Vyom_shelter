@@ -1,4 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
 import { Upload, X, FileText, CheckCircle2, Home, Sparkles, MapPinned } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -7,40 +9,8 @@ import SelectField from '../../components/ui/SelectField';
 import TagMultiSelect from '../../components/ui/TagMultiSelect';
 import LandmarkPicker from '../../components/ui/LandmarkPicker';
 import { submitProperty } from '../../services/propertyApi';
+import { listPropertySchema } from '../../utils/validations';
 import { PROPERTY_TYPES, AREA_UNITS, FACING_OPTIONS, LISTING_TYPES, FACILITIES, POSSESSION_TYPES } from '../../utils/constants';
-
-const emptyForm = {
-  listingType: 'sale',
-  propertyType: '',
-  title: '',
-  description: '',
-  location: { state: '', district: '', city: '', locality: '', address: '', pincode: '' },
-  area: { value: '', unit: 'sqft' },
-  frontRoadWidth: '',
-  facing: '',
-  facilities: [],
-  nearbyLandmarks: [],
-  price: '',
-  negotiable: false,
-  seller: { name: '', mobile: '', email: '' },
-  ownership: {
-    ownerName: '', details: '',
-    previousOwnerName: '', ownershipChain: '', possessionType: '',
-    numberOfPreviousOwners: '', yearOfPurchase: '', litigationFree: true,
-  },
-  images: [],
-  video: null,
-  documents: {},
-};
-
-const DOC_FIELDS = [
-  { key: 'saleDeed', label: 'Sale Deed' },
-  { key: 'khataKhasra', label: 'Khata / Khasra' },
-  { key: 'registry', label: 'Registry Document' },
-  { key: 'taxReceipt', label: 'Property Tax Receipt' },
-  { key: 'ownershipProof', label: 'Ownership Proof' },
-  { key: 'encumbranceCertificate', label: 'Encumbrance Certificate' },
-];
 
 function MultiImagePicker({ images, onChange }) {
   const previews = useMemo(() => images.map((file) => URL.createObjectURL(file)), [images]);
@@ -94,32 +64,60 @@ function SingleDocPicker({ label, file, onChange }) {
   );
 }
 
+const DOC_FIELDS = [
+  { key: 'saleDeed',               label: 'Sale Deed' },
+  { key: 'khataKhasra',            label: 'Khata / Khasra' },
+  { key: 'registry',               label: 'Registry Document' },
+  { key: 'taxReceipt',             label: 'Property Tax Receipt' },
+  { key: 'ownershipProof',         label: 'Ownership Proof' },
+  { key: 'encumbranceCertificate', label: 'Encumbrance Certificate' },
+];
+
 export default function ListProperty() {
   const navigate = useNavigate();
-  const [form, setForm] = useState(emptyForm);
+  const [images, setImages]       = useState([]);
+  const [video, setVideo]         = useState(null);
+  const [documents, setDocuments] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(null);
 
-  const set = (path, value) => {
-    setForm((f) => {
-      const next = { ...f };
-      if (path.includes('.')) {
-        const [a, b] = path.split('.');
-        next[a] = { ...next[a], [b]: value };
-      } else {
-        next[path] = value;
-      }
-      return next;
-    });
-  };
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(listPropertySchema),
+    defaultValues: {
+      listingType: 'sale',
+      propertyType: '',
+      title: '',
+      description: '',
+      location: { state: '', district: '', city: '', locality: '', address: '', pincode: '' },
+      area: { value: '', unit: 'sqft' },
+      frontRoadWidth: '',
+      facing: '',
+      facilities: [],
+      nearbyLandmarks: [],
+      price: '',
+      negotiable: false,
+      seller: { name: '', mobile: '', email: '' },
+      ownership: {
+        ownerName: '', details: '',
+        previousOwnerName: '', ownershipChain: '', possessionType: '',
+        numberOfPreviousOwners: '', yearOfPurchase: '', litigationFree: true,
+      },
+    },
+  });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!form.propertyType) return toast.error('Please select a property type');
-    if (!form.seller.name || !form.seller.mobile) return toast.error('Seller name and mobile are required');
+  const listingType = watch('listingType');
+
+  const onSubmit = async (data) => {
     setSubmitting(true);
     try {
-      const res = await submitProperty(form);
+      const res = await submitProperty({ ...data, images, video, documents });
       setDone(res.propertyId);
       toast.success('Property submitted for verification!');
     } catch (err) { toast.error(err.message); }
@@ -151,14 +149,16 @@ export default function ListProperty() {
         <p className="text-sm text-gray-500 mt-1">Fill in the details below. Our team verifies every listing before it goes live.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="card p-6 space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="card p-6 space-y-6">
+
         {/* Listing type */}
         <div>
           <label className="label-base">I want to</label>
           <div className="flex gap-2">
             {LISTING_TYPES.map((t) => (
-              <button key={t.value} type="button" onClick={() => set('listingType', t.value)}
-                className={`px-5 py-2 rounded-lg text-sm font-semibold ${form.listingType === t.value ? 'bg-[#1a3a5c] text-white' : 'bg-white border border-gray-200 text-gray-600'}`}>
+              <button key={t.value} type="button"
+                onClick={() => setValue('listingType', t.value)}
+                className={`px-5 py-2 rounded-lg text-sm font-semibold ${listingType === t.value ? 'bg-[#1a3a5c] text-white' : 'bg-white border border-gray-200 text-gray-600'}`}>
                 {t.value === 'sale' ? 'Sell' : 'Rent Out'}
               </button>
             ))}
@@ -167,81 +167,131 @@ export default function ListProperty() {
 
         <div className="section-title">Property Details</div>
         <div className="grid sm:grid-cols-2 gap-x-4">
-          <InputField label="Property Title" required value={form.title} onChange={(e) => set('title', e.target.value)} placeholder="e.g. 3BHK Flat near City Center" className="sm:col-span-2" />
-          <SelectField label="Property Type" required options={PROPERTY_TYPES} value={form.propertyType} onChange={(e) => set('propertyType', e.target.value)} />
-          <SelectField label="Facing" options={FACING_OPTIONS} value={form.facing} onChange={(e) => set('facing', e.target.value)} />
+          <InputField
+            label="Property Title" required
+            placeholder="e.g. 3BHK Flat near City Center"
+            className="sm:col-span-2"
+            error={errors.title?.message}
+            {...register('title')}
+          />
+          <SelectField
+            label="Property Type" required
+            options={PROPERTY_TYPES}
+            error={errors.propertyType?.message}
+            {...register('propertyType')}
+          />
+          <SelectField
+            label="Facing"
+            options={FACING_OPTIONS}
+            {...register('facing')}
+          />
           <div className="sm:col-span-2 mb-4">
             <label className="label-base">Description <span className="text-red-500">*</span></label>
-            <textarea required rows={4} className="input-base" value={form.description} onChange={(e) => set('description', e.target.value)} placeholder="Describe the property — rooms, amenities, nearby landmarks..." />
+            <textarea
+              rows={4}
+              className={`input-base ${errors.description ? 'input-error' : ''}`}
+              placeholder="Describe the property — rooms, amenities, nearby landmarks..."
+              {...register('description')}
+            />
+            {errors.description && <p className="error-msg">{errors.description.message}</p>}
           </div>
         </div>
 
         <div className="section-title">Location</div>
         <div className="grid sm:grid-cols-2 gap-x-4">
-          <InputField label="State" required value={form.location.state} onChange={(e) => set('location.state', e.target.value)} />
-          <InputField label="District" required value={form.location.district} onChange={(e) => set('location.district', e.target.value)} />
-          <InputField label="City" required value={form.location.city} onChange={(e) => set('location.city', e.target.value)} />
-          <InputField label="Locality" required value={form.location.locality} onChange={(e) => set('location.locality', e.target.value)} />
-          <InputField label="Pin Code" required value={form.location.pincode} onChange={(e) => set('location.pincode', e.target.value)} />
-          <InputField label="Full Address" required value={form.location.address} onChange={(e) => set('location.address', e.target.value)} className="sm:col-span-2" />
+          <InputField label="State"    required error={errors.location?.state?.message}    {...register('location.state')} />
+          <InputField label="District" required error={errors.location?.district?.message} {...register('location.district')} />
+          <InputField label="City"     required error={errors.location?.city?.message}     {...register('location.city')} />
+          <InputField label="Locality" required error={errors.location?.locality?.message} {...register('location.locality')} />
+          <InputField label="Pin Code" required error={errors.location?.pincode?.message}  {...register('location.pincode')} />
+          <InputField label="Full Address" required className="sm:col-span-2" error={errors.location?.address?.message} {...register('location.address')} />
         </div>
 
         <div className="section-title">Area & Pricing</div>
         <div className="grid sm:grid-cols-2 gap-x-4">
-          <InputField label="Area" required type="number" value={form.area.value} onChange={(e) => set('area.value', e.target.value)} />
-          <SelectField label="Unit" options={AREA_UNITS} value={form.area.unit} onChange={(e) => set('area.unit', e.target.value)} />
-          <InputField label="Front Road Width" value={form.frontRoadWidth} onChange={(e) => set('frontRoadWidth', e.target.value)} placeholder="e.g. 30 ft" />
-          <InputField label={`Price (₹) ${form.listingType === 'rent' ? '/ month' : ''}`} required type="number" value={form.price} onChange={(e) => set('price', e.target.value)} />
+          <InputField
+            label="Area" required type="number"
+            error={errors.area?.value?.message}
+            {...register('area.value')}
+          />
+          <SelectField
+            label="Unit"
+            options={AREA_UNITS}
+            {...register('area.unit')}
+          />
+          <InputField
+            label="Front Road Width"
+            placeholder="e.g. 30 ft"
+            {...register('frontRoadWidth')}
+          />
+          <InputField
+            label={`Price (₹)${listingType === 'rent' ? ' / month' : ''}`} required type="number"
+            error={errors.price?.message}
+            {...register('price')}
+          />
           <label className="flex items-center gap-2 text-sm text-gray-600 mb-4">
-            <input type="checkbox" checked={form.negotiable} onChange={(e) => set('negotiable', e.target.checked)} /> Price is negotiable
+            <input type="checkbox" {...register('negotiable')} /> Price is negotiable
           </label>
         </div>
 
         <div className="section-title"><Sparkles size={14} /> Facilities</div>
         <p className="text-xs text-gray-400 -mt-2 mb-3">Select everything available at this property.</p>
-        <TagMultiSelect options={FACILITIES} selected={form.facilities} onChange={(v) => set('facilities', v)} />
+        <Controller
+          name="facilities"
+          control={control}
+          render={({ field }) => (
+            <TagMultiSelect options={FACILITIES} selected={field.value} onChange={field.onChange} />
+          )}
+        />
 
         <div className="section-title"><MapPinned size={14} /> Nearby Locations</div>
         <p className="text-xs text-gray-400 -mt-2 mb-3">Add nearby places and how far they are (e.g. Metro Station, 1 km).</p>
-        <LandmarkPicker value={form.nearbyLandmarks} onChange={(v) => set('nearbyLandmarks', v)} />
+        <Controller
+          name="nearbyLandmarks"
+          control={control}
+          render={({ field }) => (
+            <LandmarkPicker value={field.value} onChange={field.onChange} />
+          )}
+        />
 
         <div className="section-title">Photos & Video</div>
-        <MultiImagePicker images={form.images} onChange={(imgs) => set('images', imgs)} />
-        <SingleDocPicker label="Property Video (optional)" file={form.video} onChange={(f) => set('video', f)} />
+        <MultiImagePicker images={images} onChange={setImages} />
+        <SingleDocPicker label="Property Video (optional)" file={video} onChange={setVideo} />
 
         <div className="section-title">Ownership History & Evidence</div>
         <p className="text-xs text-gray-400 -mt-2 mb-2">Stronger ownership evidence speeds up verification and builds buyer trust.</p>
         <div className="grid sm:grid-cols-2 gap-x-4">
-          <InputField label="Current Owner Name" value={form.ownership.ownerName} onChange={(e) => set('ownership.ownerName', e.target.value)} />
-          <SelectField label="Possession Type" options={POSSESSION_TYPES} value={form.ownership.possessionType} onChange={(e) => set('ownership.possessionType', e.target.value)} />
-          <InputField label="Previous Owner Name (if any)" value={form.ownership.previousOwnerName} onChange={(e) => set('ownership.previousOwnerName', e.target.value)} placeholder="Leave blank if first owner" />
-          <InputField label="No. of Previous Owners" type="number" min="0" value={form.ownership.numberOfPreviousOwners} onChange={(e) => set('ownership.numberOfPreviousOwners', e.target.value)} />
-          <InputField label="Year of Purchase / Acquisition" type="number" placeholder="e.g. 2015" value={form.ownership.yearOfPurchase} onChange={(e) => set('ownership.yearOfPurchase', e.target.value)} />
+          <InputField label="Current Owner Name"           {...register('ownership.ownerName')} />
+          <SelectField label="Possession Type" options={POSSESSION_TYPES} {...register('ownership.possessionType')} />
+          <InputField label="Previous Owner Name (if any)" placeholder="Leave blank if first owner" {...register('ownership.previousOwnerName')} />
+          <InputField label="No. of Previous Owners" type="number" min="0" {...register('ownership.numberOfPreviousOwners')} />
+          <InputField label="Year of Purchase / Acquisition" type="number" placeholder="e.g. 2015" {...register('ownership.yearOfPurchase')} />
           <label className="flex items-center gap-2 text-sm text-gray-600 mb-4 mt-6">
-            <input type="checkbox" checked={form.ownership.litigationFree} onChange={(e) => set('ownership.litigationFree', e.target.checked)} />
+            <input type="checkbox" {...register('ownership.litigationFree')} />
             Property is free of any litigation / legal dispute
           </label>
           <div className="sm:col-span-2 mb-4">
             <label className="label-base">Ownership Chain / History</label>
-            <textarea rows={3} className="input-base" value={form.ownership.ownershipChain}
-              onChange={(e) => set('ownership.ownershipChain', e.target.value)}
-              placeholder="Briefly describe how ownership passed — e.g. inherited from father in 2010, purchased from XYZ in 2015..." />
+            <textarea rows={3} className="input-base"
+              placeholder="Briefly describe how ownership passed — e.g. inherited from father in 2010, purchased from XYZ in 2015..."
+              {...register('ownership.ownershipChain')}
+            />
           </div>
         </div>
         <p className="text-xs text-gray-400 -mt-2 mb-2">Upload supporting documents (optional but speeds up verification):</p>
         <div className="grid sm:grid-cols-2 gap-x-4">
           {DOC_FIELDS.map((d) => (
-            <SingleDocPicker key={d.key} label={d.label} file={form.documents[d.key]}
-              onChange={(f) => set('documents', { ...form.documents, [d.key]: f })} />
+            <SingleDocPicker key={d.key} label={d.label} file={documents[d.key]}
+              onChange={(f) => setDocuments(prev => ({ ...prev, [d.key]: f }))} />
           ))}
         </div>
 
         <div className="section-title">Your Contact Details</div>
         <p className="text-xs text-gray-400 -mt-2 mb-2">No account needed — Vyom Shelter will reach out using these details.</p>
         <div className="grid sm:grid-cols-2 gap-x-4">
-          <InputField label="Your Name" required value={form.seller.name} onChange={(e) => set('seller.name', e.target.value)} />
-          <InputField label="Mobile Number" required value={form.seller.mobile} onChange={(e) => set('seller.mobile', e.target.value)} />
-          <InputField label="Email (optional)" value={form.seller.email} onChange={(e) => set('seller.email', e.target.value)} />
+          <InputField label="Your Name"      required error={errors.seller?.name?.message}   {...register('seller.name')} />
+          <InputField label="Mobile Number"  required error={errors.seller?.mobile?.message} {...register('seller.mobile')} />
+          <InputField label="Email (optional)"        error={errors.seller?.email?.message}  {...register('seller.email')} />
         </div>
 
         <button type="submit" disabled={submitting} className="btn-primary w-full justify-center py-3 text-base">

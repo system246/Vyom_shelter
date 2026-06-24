@@ -12,6 +12,10 @@ export const submitProperty = async (req, res, next) => {
     const area      = parse(req.body.area);
     const seller    = parse(req.body.seller);
     const ownership = parse(req.body.ownership) || {};
+    // Empty strings for optional Number fields cause Mongoose CastError — remove them so schema defaults apply
+    if (ownership.numberOfPreviousOwners === '' || ownership.numberOfPreviousOwners === undefined) delete ownership.numberOfPreviousOwners;
+    if (ownership.yearOfPurchase === '' || ownership.yearOfPurchase === undefined) delete ownership.yearOfPurchase;
+
     const facilities       = parse(req.body.facilities) || [];
     const nearbyLandmarks  = parse(req.body.nearbyLandmarks) || [];
 
