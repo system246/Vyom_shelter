@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Menu, X, Users, LayoutDashboard, LogOut, UserPlus, User, UserCheck, Bell, Building2, Key, MessageSquare } from 'lucide-react';
+import { Home, Menu, X, Users, LayoutDashboard, LogOut, UserPlus, User, UserCheck, Bell, Building2, Key, MessageSquare, ConciergeBell } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import NotificationBell from './NotificationBell';
@@ -20,6 +20,7 @@ export default function Navbar() {
     { to: '/properties?listingType=sale', label: 'Buy', icon: Building2 },
     { to: '/sell', label: 'Sell', icon: Home },
     { to: '/properties?listingType=rent', label: 'Rent', icon: Key },
+    { to: '/services', label: 'Our Services', icon: ConciergeBell },
   ];
 
   const links = [];
@@ -30,6 +31,11 @@ export default function Navbar() {
     links.push({ to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard });
     links.push({ to: '/admin/properties', label: 'Properties', icon: Building2 });
     links.push({ to: '/admin/enquiries', label: 'Enquiries', icon: MessageSquare });
+    links.push({
+      to: user.role === 'head_admin' ? '/admin/services' : '/services',
+      label: 'Services',
+      icon: ConciergeBell,
+    });
     if (user.role !== 'associate') {
       links.push({ to: '/admin/associates', label: 'Associates', icon: Users });
       links.push({ to: '/admin/users', label: user.role === 'head_admin' ? 'Users' : 'My Team', icon: UserPlus });

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Search, Building2, Key, ShieldCheck, UserPlus, BadgeCheck, Home as HomeIcon, Sparkles, TreePine, Store, Warehouse } from 'lucide-react';
+import LocomotiveScroll from 'locomotive-scroll';
+import 'locomotive-scroll/dist/locomotive-scroll.css';
 import { fetchProperties } from '../services/propertyApi';
 import PropertyCard from '../components/property/PropertyCard';
 import CategoryCard from '../components/property/CategoryCard';
@@ -67,6 +69,18 @@ export default function Home() {
       .catch(() => setFeatured([]));
   }, []);
 
+  // Locomotive Scroll — scoped to Home page only; destroyed on unmount
+  useEffect(() => {
+    const locoScroll = new LocomotiveScroll({
+      lenisOptions: {
+        lerp: 0.1,           // smoothness 0–1; 0.1 feels responsive without lag
+        smoothWheel: true,
+        smoothTouch: false,  // keep native scroll on mobile to avoid jank
+      },
+    });
+    return () => locoScroll.destroy();
+  }, []);
+
   const handleSearch = (e) => {
     e.preventDefault();
     const params = new URLSearchParams({ listingType });
@@ -127,7 +141,7 @@ export default function Home() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 py-12">
-        {/* Buy / Sell / Rent CTAs */}
+        {/* Buy / Sell / Rent CTAs — no scroll animation; may be visible on page load */}
         <div className="grid sm:grid-cols-3 gap-4 mb-12">
           <Link to="/properties?listingType=sale" className="card card-hover p-6 text-center">
             <Building2 size={28} className="mx-auto text-[#1a3a5c] mb-2" />
@@ -146,17 +160,17 @@ export default function Home() {
           </Link>
         </div>
 
-        {/* Browse by property type — image grid */}
+        {/* Browse by property type — staggered grid reveal */}
         <div className="mb-12">
-          <h2 className="font-bold gradient-text text-lg mb-4">Browse by Property Type</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <h2 data-scroll className="loco-fade font-bold gradient-text text-lg mb-4">Browse by Property Type</h2>
+          <div data-scroll className="loco-stagger grid grid-cols-2 md:grid-cols-3 gap-4">
             {CATEGORIES.map((c) => <CategoryCard key={c.to} {...c} />)}
           </div>
         </div>
 
-        {/* Featured properties — scroll carousel */}
+        {/* Featured properties — fade-up reveal */}
         {featured.length > 0 && (
-          <div className="mb-12">
+          <div data-scroll className="loco-fade mb-12">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-bold gradient-text text-lg">Featured Properties</h2>
               <Link to="/properties" className="text-xs font-medium text-[#1a3a5c] underline">View all</Link>
@@ -169,16 +183,16 @@ export default function Home() {
           </div>
         )}
 
-        {/* Why Vyom Shelter — colorful gradient icons */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+        {/* Why Vyom Shelter — staggered cards */}
+        <div data-scroll className="loco-stagger grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
           <Feature icon={ShieldCheck} title="Verified Listings" desc="Every property is document-checked & site-verified before going live." gradient="from-[#1a3a5c] to-[#2563a8]" />
           <Feature icon={BadgeCheck} title="Trusted Broker" desc="Vyom Shelter facilitates the full transaction, end to end." gradient="from-[#e85d26] to-[#f3792e]" />
           <Feature icon={Store} title="Smart Search" desc="Filter by location, budget, type and area to find the right match." gradient="from-[#0d9488] to-[#14b8a6]" />
           <Feature icon={Warehouse} title="Buy, Sell or Rent" desc="One platform for every kind of property transaction." gradient="from-violet-500 to-purple-500" />
         </div>
 
-        {/* Become an Associate */}
-        <div className="card p-8 bg-gradient-to-r from-[#fff7ed] to-[#ffeede] border-orange-100 flex flex-col sm:flex-row items-center justify-between gap-5">
+        {/* Become an Associate — fade-up reveal */}
+        <div data-scroll className="loco-fade card p-8 bg-gradient-to-r from-[#fff7ed] to-[#ffeede] border-orange-100 flex flex-col sm:flex-row items-center justify-between gap-5">
           <div>
             <h2 className="font-bold text-[#1a3a5c] text-lg mb-1">Want to work with us?</h2>
             <p className="text-sm text-gray-500">Become a Vyom Shelter Associate and earn through property deals in your area. Login required for this section only.</p>

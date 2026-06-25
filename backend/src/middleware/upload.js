@@ -36,6 +36,9 @@ export const upload = multerInstance.fields([
 // For profile photo upload
 export const uploadPhoto = multerInstance.single('profilePhoto');
 
+// For service logo/cover image (head_admin adds services)
+export const uploadServiceImage = multerInstance.single('serviceImage');
+
 // For property listing (seller upload: images, video, documents)
 export const uploadProperty = multerInstance.fields([
   { name: 'images',         maxCount: 10 },

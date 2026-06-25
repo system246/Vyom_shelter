@@ -24,6 +24,8 @@ const EnquiriesAdmin    = lazy(() => import('../pages/admin/EnquiriesAdmin'));
 const Properties        = lazy(() => import('../pages/properties/Properties'));
 const PropertyDetail    = lazy(() => import('../pages/properties/PropertyDetail'));
 const ListProperty      = lazy(() => import('../pages/properties/ListProperty'));
+const Services          = lazy(() => import('../pages/services/Services'));
+const ServicesAdmin     = lazy(() => import('../pages/admin/ServicesAdmin'));
 
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-[60vh] text-gray-400 text-sm">Loading...</div>
@@ -54,6 +56,10 @@ export default function AppRoutes() {
         <Route path="/properties"      element={<Properties />} />
         <Route path="/properties/:id"  element={<PropertyDetail />} />
         <Route path="/sell"            element={<ListProperty />} />
+
+        {/* Our Services — public browse, head_admin manage */}
+        <Route path="/services"        element={<Services />} />
+        <Route path="/admin/services"  element={<PrivateRoute roles={['head_admin']}><ServicesAdmin /></PrivateRoute>} />
 
         <Route path="/login"         element={<PublicRoute><Login /></PublicRoute>} />
         <Route path="/signup"        element={<PublicRoute><Signup /></PublicRoute>} />

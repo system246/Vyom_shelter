@@ -12,6 +12,7 @@ import associateRoutes    from './routes/associate.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
 import activityRoutes     from './routes/activity.routes.js';
 import propertyRoutes     from './routes/property.routes.js';
+import serviceRoutes      from './routes/service.routes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -34,6 +35,7 @@ app.use('/api/associates',    associateRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/activity-log',  activityRoutes);
 app.use('/api/properties',    propertyRoutes);
+app.use('/api/services',      serviceRoutes);
 
 app.get('/api/health', (_, res) => res.json({ status: 'ok', ts: new Date().toISOString() }));
 app.use((req, res) => res.status(404).json({ success: false, message: 'Not found' }));

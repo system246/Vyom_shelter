@@ -49,3 +49,32 @@
   body { background: white !important; }
   .card { box-shadow: none !important; }
 }
+
+/* ── Locomotive Scroll — Home page reveal animations ─────────────────────── */
+/* Simple fade-up: add data-scroll + class="loco-fade" to any element */
+[data-scroll].loco-fade {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-scroll].loco-fade.is-inview {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Staggered grid: add data-scroll + class="loco-stagger" to the grid wrapper.
+   Children animate sequentially — no extra markup needed. */
+[data-scroll].loco-stagger > * {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-scroll].loco-stagger.is-inview > * { opacity: 1; transform: none; }
+[data-scroll].loco-stagger.is-inview > *:nth-child(2) { transition-delay: 0.08s; }
+[data-scroll].loco-stagger.is-inview > *:nth-child(3) { transition-delay: 0.16s; }
+[data-scroll].loco-stagger.is-inview > *:nth-child(4) { transition-delay: 0.24s; }
+[data-scroll].loco-stagger.is-inview > *:nth-child(5) { transition-delay: 0.32s; }
+[data-scroll].loco-stagger.is-inview > *:nth-child(6) { transition-delay: 0.40s; }
+/* ─────────────────────────────────────────────────────────────────────────── */
