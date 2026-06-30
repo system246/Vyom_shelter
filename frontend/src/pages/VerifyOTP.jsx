@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
+import Seo from '../components/seo/Seo';
 import { useLocation, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { ShieldCheck } from 'lucide-react';
+import AuthLayout from '../components/layout/AuthLayout';
 
 const BASE = import.meta.env.VITE_API_URL || '/api';
 
@@ -84,19 +86,16 @@ export default function VerifyOTP() {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="card p-8 text-center">
-          <div className="w-14 h-14 bg-green-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <ShieldCheck size={26} className="text-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-[#1a3a5c]">Verify Email</h1>
-          <p className="text-sm text-gray-400 mt-2">
-            We sent a 6-digit OTP to<br />
-            <span className="font-medium text-gray-700">{email}</span>
-          </p>
-
-          <form onSubmit={handleSubmit} className="mt-8">
+    <>
+      <Seo noindex title="Verify Email" />
+      <AuthLayout
+        icon={ShieldCheck}
+        iconGradient="from-green-500 to-emerald-500"
+        title="Verify Email"
+        subtitle={<>We sent a 6-digit OTP to<br /><span className="font-medium text-gray-700">{email}</span></>}
+      >
+        <div className="text-center">
+          <form onSubmit={handleSubmit} className="mt-2">
             <div className="flex gap-2 justify-center mb-6" onPaste={handlePaste}>
               {otp.map((digit, i) => (
                 <input
@@ -128,7 +127,7 @@ export default function VerifyOTP() {
             )}
           </div>
         </div>
-      </div>
-    </div>
+      </AuthLayout>
+    </>
   );
 }

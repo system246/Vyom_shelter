@@ -1,8 +1,10 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import BackButton from '../../components/ui/BackButton';
+import PageHeader from '../../components/ui/PageHeader';
 import { useAuth } from '../../context/AuthContext';
-import { Search, Eye, Trash2, RefreshCw, CheckCircle, XCircle, Clock, X, ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { Search, Eye, Trash2, RefreshCw, CheckCircle, XCircle, Clock, X, ChevronLeft, ChevronRight, Download, Users as Users2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { resolveFileUrl } from '../../utils/resolveFileUrl';
 
 const STATUS = {
   pending:  { cls: 'bg-amber-50 text-amber-700 border-amber-200', icon: Clock },
@@ -126,16 +128,18 @@ export default function AssociatesList() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <BackButton />
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-xl font-bold text-[#1a3a5c]">Associates</h1>
-          <p className="text-xs text-gray-400 mt-0.5">{total} total records</p>
-        </div>
-        <div className="flex gap-2">
-          <button onClick={exportCSV} className="btn-ghost border border-gray-200"><Download size={14}/> Export CSV</button>
-          <button onClick={load} className="btn-ghost border border-gray-200"><RefreshCw size={14}/> Refresh</button>
-        </div>
-      </div>
+      <PageHeader
+        icon={Users2}
+        title="Associates"
+        subtitle={`${total} total records`}
+        gradient="from-[#1a3a5c] via-[#1f4a73] to-[#2563a8]"
+        action={
+          <div className="flex gap-2">
+            <button onClick={exportCSV} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-white/15 hover:bg-white/25 backdrop-blur-sm border border-white/20 text-white transition-colors"><Download size={14}/> Export CSV</button>
+            <button onClick={load} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-white/15 hover:bg-white/25 backdrop-blur-sm border border-white/20 text-white transition-colors"><RefreshCw size={14}/> Refresh</button>
+          </div>
+        }
+      />
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-5">
@@ -280,14 +284,14 @@ export default function AssociatesList() {
                   <Row label="PAN No"       value={detail.documents?.panNumber} />
                   <div className="flex gap-3 mt-2">
                     {detail.documents?.aadhaarFile ? (
-                      <a href={`${import.meta.env.VITE_API_URL?.replace('/api','') || ''}/uploads/${detail.documents.aadhaarFile}`}
+                      <a href={resolveFileUrl(detail.documents.aadhaarFile)}
                         target="_blank" rel="noopener noreferrer"
                         className="btn-ghost border border-gray-200 px-3 py-1.5 text-xs flex items-center gap-1">
                         <Eye size={13} /> View Aadhaar
                       </a>
                     ) : <span className="text-xs text-gray-400">Aadhaar not uploaded</span>}
                     {detail.documents?.panFile ? (
-                      <a href={`${import.meta.env.VITE_API_URL?.replace('/api','') || ''}/uploads/${detail.documents.panFile}`}
+                      <a href={resolveFileUrl(detail.documents.panFile)}
                         target="_blank" rel="noopener noreferrer"
                         className="btn-ghost border border-gray-200 px-3 py-1.5 text-xs flex items-center gap-1">
                         <Eye size={13} /> View PAN

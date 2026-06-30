@@ -5,7 +5,13 @@ import toast from 'react-hot-toast';
 import { fetchPropertyById, submitEnquiry } from '../../services/propertyApi';
 import { PROPERTY_TYPE_LABELS, FACILITIES, LANDMARK_TYPES } from '../../utils/constants';
 import InputField from '../../components/ui/InputField';
+import { resolveFileUrl } from '../../utils/resolveFileUrl';
 import DynamicIcon from '../../components/ui/DynamicIcon';
+import Seo, { SITE_URL } from '../../components/seo/Seo';
+import BackButton from '../../components/ui/BackButton';
+
+const MOBILE_RE = /^[6-9]\d{9}$/;
+const EMAIL_RE  = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const formatPrice = (price) => {
   if (price >= 1e7) return `₹${(price / 1e7).toFixed(2)} Cr`;
@@ -29,9 +35,16 @@ export default function PropertyDetail() {
       .finally(() => setLoading(false));
   }, [id]);
 
+  const validate = () => {
+    if (!form.name.trim()) { toast.error('Name is required'); return false; }
+    if (!MOBILE_RE.test(form.mobile)) { toast.error('Enter a valid 10-digit mobile number'); return false; }
+    if (form.email && !EMAIL_RE.test(form.email)) { toast.error('Enter a valid email address'); return false; }
+    return true;
+  };
+
   const handleEnquiry = async (e) => {
     e.preventDefault();
-    if (!form.name || !form.mobile) return toast.error('Name and mobile number are required');
+    if (!validate()) return;
     setSubmitting(true);
     try {
       await submitEnquiry(id, { ...form, type: 'interest' });
@@ -43,7 +56,7 @@ export default function PropertyDetail() {
 
   const handleScheduleVisit = async (e) => {
     e.preventDefault();
-    if (!form.name || !form.mobile) return toast.error('Name and mobile number are required');
+    if (!validate()) return;
     setSubmitting(true);
     try {
       await submitEnquiry(id, { ...form, type: 'site_visit' });
@@ -56,6 +69,7 @@ export default function PropertyDetail() {
   if (loading) return <div className="flex items-center justify-center py-24 text-gray-400"><Loader2 className="animate-spin mr-2" size={18} /> Loading...</div>;
   if (!property) return (
     <div className="max-w-2xl mx-auto px-4 py-20 text-center">
+      <Seo noindex title="Property Not Found" />
       <p className="text-gray-500 mb-3">This property is not available or pending verification.</p>
       <Link to="/properties" className="text-[#1a3a5c] underline text-sm">Back to listings</Link>
     </div>
@@ -63,14 +77,49 @@ export default function PropertyDetail() {
 
   const images = property.media?.images || [];
 
+  // RealEstateListing structured data — gives Google enough to potentially
+  // show price/location/image directly in search results, not just a link.
+  const listingJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'RealEstateListing',
+    name: property.title,
+    description: property.description,
+    url: `${SITE_URL}/properties/${property.propertyId}`,
+    image: images.map((img) => resolveFileUrl(img)),
+    datePosted: property.createdAt,
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: property.location?.city,
+      addressRegion: property.location?.state,
+      postalCode: property.location?.pincode,
+      streetAddress: property.location?.locality,
+      addressCountry: 'IN',
+    },
+    offers: {
+      '@type': 'Offer',
+      price: property.price,
+      priceCurrency: 'INR',
+      availability: 'https://schema.org/InStock',
+    },
+  };
+
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 grid md:grid-cols-3 gap-6">
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      <Seo
+        title={property.title}
+        description={`${property.title} in ${property.location?.locality}, ${property.location?.city} — ${formatPrice(property.price)}${property.listingType === 'rent' ? '/month' : ''}. ${property.description?.slice(0, 120)}`}
+        path={`/properties/${property.propertyId}`}
+        image={images[0] ? resolveFileUrl(images[0]) : undefined}
+        jsonLd={listingJsonLd}
+      />
+      <BackButton />
+      <div className="grid md:grid-cols-3 gap-6">
       {/* Left: details */}
       <div className="md:col-span-2 space-y-5">
         <div className="card overflow-hidden">
           <div className="h-72 bg-gray-100 flex items-center justify-center">
             {images.length ? (
-              <img src={`/uploads/${images[activeImg]}`} alt={property.title} className="w-full h-full object-cover" />
+              <img src={resolveFileUrl(images[activeImg])} alt={property.title} loading="lazy" className="w-full h-full object-cover" />
             ) : (
               <p className="text-gray-300 text-sm">No image available</p>
             )}
@@ -78,8 +127,8 @@ export default function PropertyDetail() {
           {images.length > 1 && (
             <div className="flex gap-2 p-3 overflow-x-auto">
               {images.map((img, idx) => (
-                <button key={img} onClick={() => setActiveImg(idx)} className={`w-16 h-16 rounded-md overflow-hidden flex-shrink-0 border-2 ${activeImg === idx ? 'border-[#1a3a5c]' : 'border-transparent'}`}>
-                  <img src={`/uploads/${img}`} className="w-full h-full object-cover" />
+                <button key={img} onClick={() => setActiveImg(idx)} aria-label={`View photo ${idx + 1} of ${property.title}`} className={`w-16 h-16 rounded-md overflow-hidden flex-shrink-0 border-2 ${activeImg === idx ? 'border-[#1a3a5c]' : 'border-transparent'}`}>
+                  <img src={resolveFileUrl(img)} alt={`${property.title} photo ${idx + 1}`} loading="lazy" className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>
@@ -164,7 +213,8 @@ export default function PropertyDetail() {
           ) : (
             <form className="space-y-1">
               <InputField label="Full Name" required value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
-              <InputField label="Mobile Number" required value={form.mobile} onChange={(e) => setForm((f) => ({ ...f, mobile: e.target.value }))} />
+              <InputField label="Mobile Number" required type="tel" inputMode="numeric" maxLength={10}
+                value={form.mobile} onChange={(e) => setForm((f) => ({ ...f, mobile: e.target.value.replace(/\D/g, '').slice(0, 10) }))} />
               <InputField label="Email (optional)" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
               <InputField label="Message (optional)" value={form.message} onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))} />
 
@@ -179,6 +229,7 @@ export default function PropertyDetail() {
             </form>
           )}
         </div>
+      </div>
       </div>
     </div>
   );

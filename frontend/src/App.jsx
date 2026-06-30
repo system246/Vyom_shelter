@@ -5,6 +5,7 @@ import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import AppRoutes from './routes/AppRoutes';
 import { useSessionTimeout } from './hooks/useSessionTimeout';
+import Analytics from './components/seo/Analytics';
 
 function AppInner() {
   useSessionTimeout();
@@ -23,6 +24,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <Analytics />
         <AppInner />
         <Toaster position="top-right" toastOptions={{ duration: 3500 }} />
       </AuthProvider>

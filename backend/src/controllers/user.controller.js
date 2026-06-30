@@ -1,6 +1,7 @@
 import { log, notify } from '../utils/activity.js';
 import User from '../models/User.model.js';
 import { sendApprovalNotification } from '../utils/mailer.js';
+import { logger } from '../utils/logger.js';
 
 // POST /api/users
 export const createUser = async (req, res, next) => {
@@ -118,9 +119,22 @@ export const updateUser = async (req, res, next) => {
 export const deleteUser = async (req, res, next) => {
   try {
     if (req.user.role !== 'head_admin')
-      return res.status(403).json({ success: false, message: 'Only head admin can delete users' });
-    const user = await User.findByIdAndDelete(req.params.id);
-    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+      return res.status(403).json({ success: false, code: 'FORBIDDEN', message: 'Only head admin can delete users' });
+
+    // Without this guard, the head admin could delete their own account —
+    // there's no path to create a second head_admin (signup only ever
+    // creates 'associate' accounts), so that would permanently lock
+    // everyone out of admin access with no recovery.
+    if (req.params.id === req.user._id.toString())
+      return res.status(400).json({ success: false, code: 'CANNOT_DELETE_SELF', message: 'You cannot delete your own account.' });
+
+    const target = await User.findById(req.params.id);
+    if (!target) return res.status(404).json({ success: false, code: 'NOT_FOUND', message: 'User not found' });
+    if (target.role === 'head_admin')
+      return res.status(400).json({ success: false, code: 'CANNOT_DELETE_HEAD_ADMIN', message: 'The head admin account cannot be deleted.' });
+
+    await target.deleteOne();
+    logger.warn('User deleted', { deletedUser: target._id.toString(), deletedRole: target.role, by: req.user._id.toString() });
     res.json({ success: true, message: 'User deleted' });
   } catch (err) { next(err); }
 };
@@ -154,7 +168,7 @@ export const uploadProfilePhoto = async (req, res, next) => {
     if (req.user._id.toString() !== req.params.id && req.user.role !== 'head_admin')
       return res.status(403).json({ success: false, message: 'Access denied' });
 
-    user.profile.photoUrl = `profilePhoto/${req.file.filename}`;
+    user.profile.photoUrl = req.file.path; // Cloudinary's full secure URL
     await user.save();
 
     res.json({ success: true, photoUrl: user.profile.photoUrl, message: 'Photo updated' });

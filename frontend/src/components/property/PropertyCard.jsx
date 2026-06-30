@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { MapPin, Maximize, BadgeCheck, Home as HomeIcon } from 'lucide-react';
 import { PROPERTY_TYPE_LABELS } from '../../utils/constants';
+import { resolveFileUrl } from '../../utils/resolveFileUrl';
 
 const formatPrice = (price) => {
   if (price >= 1e7) return `₹${(price / 1e7).toFixed(2)} Cr`;
@@ -17,7 +18,7 @@ export default function PropertyCard({ property }) {
     >
       <div className="h-40 bg-gray-100 relative overflow-hidden">
         {img ? (
-          <img src={`/uploads/${img}`} alt={property.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          <img src={resolveFileUrl(img)} alt={property.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-300">
             <HomeIcon size={36} />

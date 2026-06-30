@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import BackButton from '../../components/ui/BackButton';
+import PageHeader from '../../components/ui/PageHeader';
 import { useAuth } from '../../context/AuthContext';
 import { RefreshCw, Phone, MessageSquare } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -34,13 +35,15 @@ export default function EnquiriesAdmin() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       <BackButton />
-      <div className="flex items-center justify-between mb-5">
-        <div>
-          <h1 className="text-xl font-bold text-[#1a3a5c]">Buyer / Tenant Enquiries</h1>
-          <p className="text-xs text-gray-400 mt-0.5">{enquiries.length} leads</p>
-        </div>
-        <button onClick={load} className="btn-ghost border border-gray-200"><RefreshCw size={14} /></button>
-      </div>
+      <PageHeader
+        icon={MessageSquare}
+        title="Buyer / Tenant Enquiries"
+        subtitle={`${enquiries.length} leads`}
+        gradient="from-[#e85d26] via-[#e8702f] to-[#f3792e]"
+        action={
+          <button onClick={load} className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium bg-white/15 hover:bg-white/25 backdrop-blur-sm border border-white/20 text-white transition-colors"><RefreshCw size={14} /></button>
+        }
+      />
 
       {loading ? (
         <div className="text-center py-12 text-gray-400 text-sm">Loading...</div>

@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Seo from '../components/seo/Seo';
 
 const Home              = lazy(() => import('../pages/Home'));
 const Login             = lazy(() => import('../pages/Login'));
@@ -36,14 +37,24 @@ const PrivateRoute = ({ children, roles }) => {
   if (loading) return <PageLoader />;
   if (!user)   return <Navigate to="/login" replace />;
   if (roles && !roles.includes(user.role)) return <Navigate to="/admin/dashboard" replace />;
-  return children;
+  return (
+    <>
+      <Seo noindex title="Account" />
+      {children}
+    </>
+  );
 };
 
 const PublicRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (user) return <Navigate to="/admin/dashboard" replace />;
-  return children;
+  return (
+    <>
+      <Seo noindex title="Account" />
+      {children}
+    </>
+  );
 };
 
 export default function AppRoutes() {
@@ -67,7 +78,9 @@ export default function AppRoutes() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/success"       element={<Success />} />
 
-        <Route path="/register"      element={<PrivateRoute roles={['head_admin','admin']}><RegisterAssociate /></PrivateRoute>} />
+        {/* All logged-in roles can reach /register — associates fill their own
+            form here; admin/head_admin can register a walk-in associate. */}
+        <Route path="/register"      element={<PrivateRoute><RegisterAssociate /></PrivateRoute>} />
         <Route path="/report"        element={<PrivateRoute><Report /></PrivateRoute>} />
         <Route path="/my-profile"    element={<PrivateRoute><MyProfile /></PrivateRoute>} />
         <Route path="/id-card"       element={<PrivateRoute><IDCard /></PrivateRoute>} />

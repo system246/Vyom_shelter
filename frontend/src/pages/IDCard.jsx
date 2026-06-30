@@ -1,9 +1,10 @@
 import { useAuth } from '../context/AuthContext';
 import { useEffect, useState, useRef } from 'react';
-import { Printer, Download } from 'lucide-react';
+import { Printer, Download, ShieldOff } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import BackButton from '../components/ui/BackButton';
+import { resolveFileUrl } from '../utils/resolveFileUrl';
 
-const API_URL = import.meta.env.VITE_API_URL?.replace('/api','') || '';
 const QR_URL = (text) => `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(text)}`;
 
 export default function IDCard() {
@@ -22,13 +23,30 @@ export default function IDCard() {
   }, [user]);
 
   const photoUrl = user?.profile?.photoUrl
-    ? `${API_URL}/uploads/${user.profile.photoUrl}`
+    ? resolveFileUrl(user.profile.photoUrl)
     : null;
 
   const handlePrint = () => window.print();
 
   const data = assoc?.personal || {};
   const refData = assoc?.referral || {};
+
+  // ID cards are an associate-only concept — head_admin/admin accounts never
+  // have an Associate registration record at all (by design, not because
+  // anything is "pending"). Reaching this page directly by URL used to show
+  // a misleading "pending" status; this is the accurate alternative.
+  if (user?.role !== 'associate') {
+    return (
+      <div className="max-w-md mx-auto px-4 py-16 text-center">
+        <BackButton />
+        <ShieldOff size={32} className="mx-auto text-gray-300 mb-3" />
+        <p className="text-gray-500 text-sm mb-4">
+          ID cards are issued to Associates only — {user?.role === 'head_admin' ? 'head admin' : 'admin'} accounts don't have one.
+        </p>
+        <Link to="/my-profile" className="text-[#1a3a5c] underline text-sm">Back to My Profile</Link>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">

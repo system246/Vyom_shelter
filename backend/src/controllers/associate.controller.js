@@ -1,20 +1,60 @@
 import Associate from '../models/Associate.model.js';
 import { generateAssociateId, generateCandidateRefNo } from '../utils/generateId.js';
+import {
+  associatePersonalSchema, associateProfessionalSchema,
+  associateDocumentSchema, associateBankSchema, associateReferralSchema,
+} from '../validations/schemas.js';
+import { logger } from '../utils/logger.js';
+import { z } from 'zod';
+
+// JSON.parse can throw on malformed multipart fields — wrap so a bad
+// request gets a clean 400 instead of a raw SyntaxError leaking to the
+// generic 500 path.
+const safeParse = (v) => {
+  if (typeof v !== 'string') return v;
+  try { return JSON.parse(v); } catch { return undefined; }
+};
+
+const declarationSchema = z.object({ acceptTerms: z.literal(true, { errorMap: () => ({ message: 'You must accept the terms & conditions' }) }) });
 
 // POST /api/associates
 export const submitAssociate = async (req, res, next) => {
   try {
-    const parse = (v) => (typeof v === 'string' ? JSON.parse(v) : v);
-    const personal     = parse(req.body.personal);
-    const professional = parse(req.body.professional);
-    const documents    = parse(req.body.documents);
-    const bank         = parse(req.body.bank);
-    const referral     = parse(req.body.referral);
-    const declaration  = parse(req.body.declaration);
+    const personal     = safeParse(req.body.personal);
+    const professional = safeParse(req.body.professional);
+    const documents     = safeParse(req.body.documents) || {};
+    const bank          = safeParse(req.body.bank);
+    const referral       = safeParse(req.body.referral);
+    const declaration    = safeParse(req.body.declaration);
 
-    if (req.files?.aadhaarFile?.[0])  documents.aadhaarFile  = `aadhaarFile/${req.files.aadhaarFile[0].filename}`;
-    if (req.files?.panFile?.[0])      documents.panFile      = `panFile/${req.files.panFile[0].filename}`;
-    if (req.files?.bankDocument?.[0]) documents.bankDocument = `bankDocument/${req.files.bankDocument[0].filename}`;
+    const checks = [
+      ['personal', associatePersonalSchema, personal],
+      ['professional', associateProfessionalSchema, professional],
+      ['documents', associateDocumentSchema, documents],
+      ['bank', associateBankSchema, bank],
+      ['referral', associateReferralSchema, referral],
+      ['declaration', declarationSchema, declaration],
+    ];
+
+    const errors = [];
+    for (const [section, schema, value] of checks) {
+      const result = schema.safeParse(value);
+      if (!result.success) {
+        result.error.issues.forEach((issue) =>
+          errors.push({ field: `${section}.${issue.path.join('.')}`, message: issue.message })
+        );
+      }
+    }
+    if (errors.length) {
+      const err = new Error('Validation failed');
+      err.name = 'AppValidationError';
+      err.errors = errors;
+      return next(err);
+    }
+
+    if (req.files?.aadhaarFile?.[0])  documents.aadhaarFile  = req.files.aadhaarFile[0].path;
+    if (req.files?.panFile?.[0])      documents.panFile      = req.files.panFile[0].path;
+    if (req.files?.bankDocument?.[0]) bank.bankDocument       = req.files.bankDocument[0].path;
 
     const associateId = generateAssociateId();
     const associate = await Associate.create({
@@ -31,6 +71,7 @@ export const submitAssociate = async (req, res, next) => {
       await req.user.save();
     }
 
+    logger.success('Associate registration submitted', { associateId, by: req.user?._id?.toString() });
     res.status(201).json({ success: true, message: 'Submitted successfully', associateId: associate.associateId });
   } catch (err) { next(err); }
 };
@@ -50,7 +91,7 @@ export const getAllAssociates = async (req, res, next) => {
 
     const total = await Associate.countDocuments(filter);
     const data  = await Associate.find(filter)
-      .select('-documents.aadhaarFile -documents.panFile')
+      .select('-documents.aadhaarFile -documents.panFile -bank.accountNumber -bank.bankDocument')
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(Number(limit));
@@ -64,11 +105,24 @@ export const getAssociateById = async (req, res, next) => {
   try {
     const me = req.user;
     const associate = await Associate.findOne({ associateId: req.params.id });
-    if (!associate) return res.status(404).json({ success: false, message: 'Not found' });
+    if (!associate) return res.status(404).json({ success: false, code: 'NOT_FOUND', message: 'Associate record not found.' });
 
-    // Access control
+    // Access control — every non-head_admin role is restricted to records
+    // they created/own. Previously this only checked the 'admin' role and
+    // silently let ANY associate view ANY other associate's full record
+    // (Aadhaar number, PAN number, bank account number, uploaded document
+    // URLs) just by changing the ID in the URL. Fixed: associate role is
+    // now checked too, against both createdByUser and their own linked record.
     if (me?.role === 'admin' && associate.createdByUser?.toString() !== me._id.toString())
-      return res.status(403).json({ success: false, message: 'Access denied' });
+      return res.status(403).json({ success: false, code: 'FORBIDDEN', message: 'Access denied' });
+
+    if (me?.role === 'associate') {
+      const isOwnRecord =
+        associate.createdByUser?.toString() === me._id.toString() ||
+        associate.associateId === me.associateRecordId;
+      if (!isOwnRecord)
+        return res.status(403).json({ success: false, code: 'FORBIDDEN', message: 'Access denied' });
+    }
 
     res.json({ success: true, data: associate });
   } catch (err) { next(err); }
@@ -78,11 +132,11 @@ export const getAssociateById = async (req, res, next) => {
 export const updateStatus = async (req, res, next) => {
   try {
     if (req.user.role !== 'head_admin')
-      return res.status(403).json({ success: false, message: 'Only head admin can update status' });
+      return res.status(403).json({ success: false, code: 'FORBIDDEN', message: 'Only head admin can update status' });
 
     const { status } = req.body;
     if (!['pending', 'approved', 'rejected'].includes(status))
-      return res.status(400).json({ success: false, message: 'Invalid status' });
+      return res.status(400).json({ success: false, code: 'VALIDATION_ERROR', message: 'Invalid status' });
 
     const update = { status };
     // The candidate's own referral code is only created the moment they're
@@ -98,7 +152,9 @@ export const updateStatus = async (req, res, next) => {
     const associate = await Associate.findOneAndUpdate(
       { associateId: req.params.id }, update, { new: true }
     );
-    if (!associate) return res.status(404).json({ success: false, message: 'Not found' });
+    if (!associate) return res.status(404).json({ success: false, code: 'NOT_FOUND', message: 'Associate record not found.' });
+
+    logger.info('Associate status updated', { associateId: associate.associateId, status, by: req.user._id.toString() });
     res.json({ success: true, message: `Status → ${status}`, data: associate });
   } catch (err) { next(err); }
 };
@@ -107,10 +163,12 @@ export const updateStatus = async (req, res, next) => {
 export const deleteAssociate = async (req, res, next) => {
   try {
     if (req.user.role !== 'head_admin')
-      return res.status(403).json({ success: false, message: 'Only head admin can delete' });
+      return res.status(403).json({ success: false, code: 'FORBIDDEN', message: 'Only head admin can delete' });
 
     const associate = await Associate.findOneAndDelete({ associateId: req.params.id });
-    if (!associate) return res.status(404).json({ success: false, message: 'Not found' });
+    if (!associate) return res.status(404).json({ success: false, code: 'NOT_FOUND', message: 'Associate record not found.' });
+
+    logger.warn('Associate record deleted', { associateId: associate.associateId, by: req.user._id.toString() });
     res.json({ success: true, message: 'Deleted' });
   } catch (err) { next(err); }
 };

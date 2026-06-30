@@ -4,10 +4,10 @@ import { Mail, Phone, Calendar, Printer, Camera, IdCard, Copy, KeyRound } from '
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import BackButton from '../components/ui/BackButton';
+import { resolveFileUrl } from '../utils/resolveFileUrl';
 import { HEAD_REFERRAL_CODE, HEAD_REFERRAL_NAME } from '../utils/constants';
 
 const BASE = import.meta.env.VITE_API_URL || '/api';
-const API_URL = BASE.replace('/api', '');
 
 const ROLE_STYLE = {
   head_admin: 'bg-purple-100 text-purple-700',
@@ -83,7 +83,7 @@ export default function MyProfile() {
     finally { setSaving(false); }
   };
 
-  const fullPhotoUrl = photoUrl ? `${API_URL}/uploads/${photoUrl}` : null;
+  const fullPhotoUrl = resolveFileUrl(photoUrl);
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
@@ -91,7 +91,9 @@ export default function MyProfile() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-bold text-[#1a3a5c]">My Profile</h1>
         <div className="flex gap-2 print:hidden">
-          <Link to="/id-card" className="btn-ghost border border-gray-200"><IdCard size={14}/> ID Card</Link>
+          {user?.role === 'associate' && (
+            <Link to="/id-card" className="btn-ghost border border-gray-200"><IdCard size={14}/> ID Card</Link>
+          )}
           <button onClick={() => window.print()} className="btn-ghost border border-gray-200"><Printer size={14}/> Print</button>
         </div>
       </div>

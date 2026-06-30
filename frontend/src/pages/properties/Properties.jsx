@@ -6,6 +6,7 @@ import PropertyCard from '../../components/property/PropertyCard';
 import SelectField from '../../components/ui/SelectField';
 import InputField from '../../components/ui/InputField';
 import { PROPERTY_TYPES } from '../../utils/constants';
+import Seo from '../../components/seo/Seo';
 
 export default function Properties() {
   const [params, setParams] = useSearchParams();
@@ -39,6 +40,15 @@ export default function Properties() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
+      <Seo
+        title={listingType === 'rent' ? 'Properties for Rent' : 'Properties for Sale'}
+        description={`Browse verified properties ${listingType === 'rent' ? 'for rent' : 'for sale'} across India. Plots, flats, houses, commercial shops and farm houses — every listing personally verified by Vyom Shelter.`}
+        path={`/properties?listingType=${listingType}`}
+      />
+      <h1 className="sr-only">
+        {listingType === 'rent' ? 'Properties for Rent' : 'Properties for Sale'} — Verified Listings by Vyom Shelter
+      </h1>
+
       {/* Tabs */}
       <div className="flex gap-2 mb-6">
         {[{ v: 'sale', l: 'Buy' }, { v: 'rent', l: 'Rent' }].map((t) => (

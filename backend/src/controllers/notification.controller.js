@@ -1,5 +1,6 @@
 import Notification from '../models/Notification.model.js';
 import ActivityLog from '../models/ActivityLog.model.js';
+import { logger } from '../utils/logger.js';
 
 // GET /api/notifications
 export const getNotifications = async (req, res, next) => {
@@ -22,7 +23,18 @@ export const markAllRead = async (req, res, next) => {
 // PATCH /api/notifications/:id/read
 export const markRead = async (req, res, next) => {
   try {
-    await Notification.findByIdAndUpdate(req.params.id, { read: true });
+    // Scoped to userId as well as _id — without this, any logged-in user
+    // could mark ANY other user's notification as read just by guessing/
+    // incrementing the ID in the URL (an IDOR vulnerability). Low impact
+    // here (only flips a read flag, no data exposure) but still a real
+    // cross-account write with no authorization check.
+    const notification = await Notification.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user._id },
+      { read: true },
+      { new: true }
+    );
+    if (!notification)
+      return res.status(404).json({ success: false, code: 'NOT_FOUND', message: 'Notification not found.' });
     res.json({ success: true });
   } catch (err) { next(err); }
 };
@@ -31,7 +43,7 @@ export const markRead = async (req, res, next) => {
 export const getActivityLog = async (req, res, next) => {
   try {
     if (req.user.role !== 'head_admin')
-      return res.status(403).json({ success: false, message: 'Access denied' });
+      return res.status(403).json({ success: false, code: 'FORBIDDEN', message: 'Access denied' });
     const logs = await ActivityLog.find()
       .populate('performedBy', 'profile.fullName email role')
       .sort({ createdAt: -1 }).limit(100);

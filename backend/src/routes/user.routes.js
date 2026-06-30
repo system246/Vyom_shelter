@@ -1,10 +1,12 @@
 import express from 'express';
 import { protect, allow } from '../middleware/auth.js';
 import { uploadPhoto } from '../middleware/upload.js';
+import { validate } from '../middleware/validate.js';
+import { createUserSchema } from '../validations/schemas.js';
 import { createUser, getUsers, getUserById, updateUser, deleteUser, getUserTree, uploadProfilePhoto } from '../controllers/user.controller.js';
 const router = express.Router();
 router.use(protect);
-router.post('/',                allow('head_admin', 'admin'), createUser);
+router.post('/',                allow('head_admin', 'admin'), validate(createUserSchema), createUser);
 router.get('/',                 allow('head_admin', 'admin', 'associate'), getUsers);
 router.get('/:id',              allow('head_admin', 'admin', 'associate'), getUserById);
 router.get('/:id/tree',         allow('head_admin', 'admin', 'associate'), getUserTree);

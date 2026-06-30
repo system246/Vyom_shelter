@@ -5,7 +5,9 @@ import {
   Phone, MessageCircle, Mail, X, Loader2, Layers, CheckCircle2,
 } from 'lucide-react';
 import { fetchServices } from '../../services/serviceApi';
+import { resolveFileUrl } from '../../utils/resolveFileUrl';
 import logo from '../../assets/logo.png';
+import Seo from '../../components/seo/Seo';
 
 const CATEGORIES = [
   { label: 'All',              icon: Layers        },
@@ -55,7 +57,7 @@ function ContactModal({ service, onClose }) {
         <div className="flex items-center gap-3 mb-5">
           <div className="w-12 h-12 rounded-xl overflow-hidden bg-[#1a3a5c]/10 flex items-center justify-center flex-shrink-0">
             {service.image ? (
-              <img src={`/uploads/${service.image}`} alt={service.title} className="w-full h-full object-cover" />
+              <img src={resolveFileUrl(service.image)} alt={service.title} className="w-full h-full object-cover" />
             ) : (
               <img src={logo} alt="Vyom Shelter" className="w-8 h-8 object-contain" />
             )}
@@ -141,7 +143,7 @@ function ServiceCard({ service, onConnect }) {
       <div className="h-40 relative overflow-hidden bg-gray-100">
         {service.image ? (
           <img
-            src={`/uploads/${service.image}`}
+            src={resolveFileUrl(service.image)}
             alt={service.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
@@ -214,6 +216,11 @@ export default function Services() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
+      <Seo
+        title="Our Services"
+        description="Find trusted local professionals — labour, home repair, daily essentials and more — verified and connected through Vyom Shelter."
+        path="/services"
+      />
 
       {/* Page header */}
       <div className="text-center mb-8">

@@ -1,12 +1,13 @@
 import mongoose from 'mongoose';
+import { logger } from './logger.js';
 
 const connectDB = async () => {
   try {
     const conn = await mongoose.connect(process.env.MONGO_URI);
-    console.log(`✅ MongoDB connected: ${conn.connection.host}`);
+    logger.success(`MongoDB connected: ${conn.connection.host}`);
     await seedHeadAdmin();
   } catch (err) {
-    console.error(`❌ MongoDB error: ${err.message}`);
+    logger.error('MongoDB connection failed — exiting', { message: err.message });
     process.exit(1);
   }
 };
@@ -31,7 +32,7 @@ const seedHeadAdmin = async () => {
     isActive:   true,
     isVerified: true,
   });
-  console.log(`🌱 Head admin seeded: ${process.env.HEAD_ADMIN_EMAIL}`);
+  logger.success(`Head admin seeded: ${process.env.HEAD_ADMIN_EMAIL}`);
 };
 
 export default connectDB;

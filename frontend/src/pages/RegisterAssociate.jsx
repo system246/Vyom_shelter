@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
+import BackButton from '../components/ui/BackButton';
 import Stepper             from '../components/layout/Stepper';
 import PersonalDetails     from '../components/forms/PersonalDetails';
 import ProfessionalDetails from '../components/forms/ProfessionalDetails';
@@ -85,6 +86,7 @@ export default function RegisterAssociate() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
+      <BackButton />
       <div className="text-center mb-6">
         <h1 className="text-2xl font-bold text-[#1a3a5c]">Associate Registration</h1>
         <p className="text-sm text-gray-500 mt-1">Complete all steps to register an associate</p>

@@ -20,10 +20,25 @@ const sendEmailSafely = async (fn, ...args) => {
   catch (err) { console.error('[mailer] send failed (continuing anyway):', err.message); return false; }
 };
 
+// SECURITY: every value below comes straight from the request body and is
+// used inside a Mongoose query (findOne({ email }), etc). If a client sends
+// an object instead of a string — e.g. { "email": { "$ne": null } } — Mongo
+// would treat it as a query operator instead of a literal value, which can
+// match arbitrary documents (classic NoSQL injection / auth-bypass class
+// bug). Every body field used in a query below is now run through this
+// guard first; anything that isn't a plain string is rejected outright.
+const asSafeString = (value, maxLen = 256) => {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length > maxLen) return null;
+  return trimmed;
+};
+
 // POST /api/auth/signup
 export const signup = async (req, res, next) => {
   try {
-    const { email, password, fullName, mobile } = req.body;
+    const email = asSafeString(req.body.email);
+    const { password, fullName, mobile } = req.body;
     if (!email || !password || !fullName)
       return res.status(400).json({ success: false, message: 'Name, email and password required' });
 
@@ -68,7 +83,10 @@ export const signup = async (req, res, next) => {
 // POST /api/auth/verify-otp
 export const verifyOTP = async (req, res, next) => {
   try {
-    const { email, otp } = req.body;
+    const email = asSafeString(req.body.email);
+    const otp   = asSafeString(req.body.otp, 12);
+    if (!email || !otp) return res.status(400).json({ success: false, message: 'Email and OTP required' });
+
     const user = await User.findOne({ email }).select('+otp +otpExpiry');
     if (!user)
       return res.status(404).json({ success: false, message: 'User not found' });
@@ -96,7 +114,9 @@ export const verifyOTP = async (req, res, next) => {
 // POST /api/auth/resend-otp
 export const resendOTP = async (req, res, next) => {
   try {
-    const { email } = req.body;
+    const email = asSafeString(req.body.email);
+    if (!email) return res.status(400).json({ success: false, message: 'Email required' });
+
     const user = await User.findOne({ email }).select('+otp +otpExpiry');
     if (!user)
       return res.status(404).json({ success: false, message: 'User not found' });
@@ -118,8 +138,9 @@ export const resendOTP = async (req, res, next) => {
 // POST /api/auth/login
 export const login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
-    if (!email || !password)
+    const email = asSafeString(req.body.email);
+    const { password } = req.body;
+    if (!email || !password || typeof password !== 'string')
       return res.status(400).json({ success: false, message: 'Email and password required' });
 
     const user = await User.findOne({ email }).select('+password');
@@ -144,7 +165,9 @@ export const getMe = async (req, res) => {
 // POST /api/auth/forgot-password
 export const forgotPassword = async (req, res, next) => {
   try {
-    const { email } = req.body;
+    const email = asSafeString(req.body.email);
+    if (!email) return res.status(400).json({ success: false, message: 'Email required' });
+
     const user = await User.findOne({ email }).select('+otp +otpExpiry');
     if (!user) return res.json({ success: true, message: 'If that email exists, a reset link was sent.' });
 
@@ -161,8 +184,11 @@ export const forgotPassword = async (req, res, next) => {
 // POST /api/auth/reset-password
 export const resetPassword = async (req, res, next) => {
   try {
-    const { email, otp, password } = req.body;
-    if (!password || password.length < 6)
+    const email = asSafeString(req.body.email);
+    const otp   = asSafeString(req.body.otp, 12);
+    const { password } = req.body;
+    if (!email || !otp) return res.status(400).json({ success: false, message: 'Email and OTP required' });
+    if (!password || typeof password !== 'string' || password.length < 6)
       return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
 
     const user = await User.findOne({ email }).select('+otp +otpExpiry +password');

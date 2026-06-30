@@ -7,8 +7,8 @@ export const personalSchema = z.object({
   gender:      z.enum(['male', 'female', 'other'], { required_error: 'Select a gender' }),
   address:     z.string().min(10, 'Address must be at least 10 characters'),
   pincode:     z.string().regex(/^\d{6}$/, 'Pincode must be 6 digits'),
-  mobile:      z.string().regex(/^\d{10}$/, 'Mobile must be 10 digits'),
-  whatsapp:    z.string().regex(/^\d{10}$/, 'WhatsApp must be 10 digits'),
+  mobile:      z.string().regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit mobile number'),
+  whatsapp:    z.string().regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit WhatsApp number'),
   email:       z.string().email('Enter a valid email address'),
 });
 
@@ -67,7 +67,7 @@ export const listPropertySchema = z.object({
   negotiable: z.boolean(),
   seller: z.object({
     name:   z.string().min(2, 'Your name is required'),
-    mobile: z.string().regex(/^\d{10}$/, 'Enter a valid 10-digit mobile number'),
+    mobile: z.string().regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit mobile number'),
     email:  z.string().refine(v => v === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), 'Enter a valid email'),
   }),
   ownership: z.object({

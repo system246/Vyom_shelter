@@ -8,6 +8,7 @@ import InputField from '../../components/ui/InputField';
 import SelectField from '../../components/ui/SelectField';
 import TagMultiSelect from '../../components/ui/TagMultiSelect';
 import LandmarkPicker from '../../components/ui/LandmarkPicker';
+import Seo from '../../components/seo/Seo';
 import { submitProperty } from '../../services/propertyApi';
 import { listPropertySchema } from '../../utils/validations';
 import { PROPERTY_TYPES, AREA_UNITS, FACING_OPTIONS, LISTING_TYPES, FACILITIES, POSSESSION_TYPES } from '../../utils/constants';
@@ -26,8 +27,9 @@ function MultiImagePicker({ images, onChange }) {
       <div className="flex flex-wrap gap-2">
         {images.map((file, idx) => (
           <div key={idx} className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-200">
-            <img src={previews[idx]} className="w-full h-full object-cover" />
+            <img src={previews[idx]} alt={`Property photo ${idx + 1} preview`} className="w-full h-full object-cover" />
             <button type="button" onClick={() => onChange(images.filter((_, i) => i !== idx))}
+              aria-label={`Remove photo ${idx + 1}`}
               className="absolute top-0.5 right-0.5 bg-black/60 text-white rounded-full p-0.5">
               <X size={11} />
             </button>
@@ -57,7 +59,7 @@ function SingleDocPicker({ label, file, onChange }) {
         <div className="flex items-center gap-2 border border-green-200 bg-green-50 rounded-lg p-2.5">
           <FileText size={16} className="text-green-700" />
           <span className="text-sm text-gray-700 truncate flex-1">{file.name}</span>
-          <button type="button" onClick={() => onChange(null)}><X size={14} className="text-red-400" /></button>
+          <button type="button" onClick={() => onChange(null)} aria-label={`Remove ${file.name}`}><X size={14} className="text-red-400" /></button>
         </div>
       )}
     </div>
@@ -127,6 +129,7 @@ export default function ListProperty() {
   if (done) {
     return (
       <div className="max-w-lg mx-auto px-4 py-20 text-center">
+        <Seo noindex title="Property Submitted" />
         <CheckCircle2 size={40} className="mx-auto text-green-600 mb-4" />
         <h1 className="text-xl font-bold text-[#1a3a5c] mb-2">Property Submitted!</h1>
         <p className="text-sm text-gray-500 mb-1">Your reference ID:</p>
@@ -141,6 +144,11 @@ export default function ListProperty() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
+      <Seo
+        title="Sell or Rent Out Your Property"
+        description="List your property for sale or rent with Vyom Shelter — no login required. Our team verifies every listing before it goes live."
+        path="/sell"
+      />
       <div className="text-center mb-6">
         <div className="inline-flex items-center gap-2 bg-[#e8f0fb] text-[#1a3a5c] text-xs font-semibold px-4 py-1.5 rounded-full mb-3 uppercase tracking-wider">
           <Home size={13} /> List Your Property — No Login Required

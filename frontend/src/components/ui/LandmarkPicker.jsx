@@ -29,7 +29,7 @@ export default function LandmarkPicker({ value = [], onChange }) {
             <span key={idx} className="flex items-center gap-1.5 bg-[#e8f0fb] text-[#1a3a5c] text-xs font-medium pl-2.5 pr-1.5 py-1.5 rounded-full">
               <DynamicIcon name={def?.icon} size={13} />
               {def?.label || item.type} &middot; {item.distanceKm} km
-              <button type="button" onClick={() => remove(idx)} className="ml-1 hover:bg-black/10 rounded-full p-0.5">
+              <button type="button" onClick={() => remove(idx)} aria-label={`Remove ${def?.label || item.type}`} className="ml-1 hover:bg-black/10 rounded-full p-0.5">
                 <X size={11} />
               </button>
             </span>

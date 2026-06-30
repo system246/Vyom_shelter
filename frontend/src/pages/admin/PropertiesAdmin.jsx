@@ -1,7 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import BackButton from '../../components/ui/BackButton';
+import PageHeader from '../../components/ui/PageHeader';
+import { resolveFileUrl } from '../../utils/resolveFileUrl';
 import { useAuth } from '../../context/AuthContext';
-import { CheckCircle, XCircle, RefreshCw, Home, MapPin, Star } from 'lucide-react';
+import { CheckCircle, XCircle, RefreshCw, Home, MapPin, Star, Building2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { fetchAdminProperties, updatePropertyStatus } from '../../services/propertyApi';
 import { PROPERTY_TYPE_LABELS, PROPERTY_STATUS_LABELS } from '../../utils/constants';
@@ -45,13 +47,15 @@ export default function PropertiesAdmin() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       <BackButton />
-      <div className="flex items-center justify-between mb-5">
-        <div>
-          <h1 className="text-xl font-bold text-[#1a3a5c]">Property Verification</h1>
-          <p className="text-xs text-gray-400 mt-0.5">{properties.length} properties in "{PROPERTY_STATUS_LABELS[tab]}"</p>
-        </div>
-        <button onClick={load} className="btn-ghost border border-gray-200"><RefreshCw size={14} /></button>
-      </div>
+      <PageHeader
+        icon={Building2}
+        title="Property Verification"
+        subtitle={`${properties.length} properties in "${PROPERTY_STATUS_LABELS[tab]}"`}
+        gradient="from-emerald-600 via-teal-600 to-teal-500"
+        action={
+          <button onClick={load} className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium bg-white/15 hover:bg-white/25 backdrop-blur-sm border border-white/20 text-white transition-colors"><RefreshCw size={14} /></button>
+        }
+      />
 
       <div className="flex gap-2 mb-6 overflow-x-auto">
         {TABS.map((t) => (
@@ -75,7 +79,7 @@ export default function PropertiesAdmin() {
             <div key={p._id} className="card p-4 flex flex-col sm:flex-row gap-4">
               <div className="w-full sm:w-28 h-28 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                 {p.media?.images?.[0] ? (
-                  <img src={`/uploads/${p.media.images[0]}`} className="w-full h-full object-cover" />
+                  <img src={resolveFileUrl(p.media.images[0])} alt={p.title} loading="lazy" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-300"><Home size={24} /></div>
                 )}

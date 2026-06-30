@@ -1,22 +1,13 @@
 import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
+import CloudinaryStorage from '../utils/cloudinaryStorage.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const UPLOAD_DIR = path.join(__dirname, '..', '..', 'uploads');
-if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const sub = path.join(UPLOAD_DIR, file.fieldname);
-    if (!fs.existsSync(sub)) fs.mkdirSync(sub, { recursive: true });
-    cb(null, sub);
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${file.fieldname}_${Date.now()}${path.extname(file.originalname)}`);
-  },
-});
+// Files go straight to Cloudinary's CDN instead of the server's local disk.
+// This fixes two real problems with local storage: (1) most free hosting
+// platforms wipe the filesystem on every redeploy/restart, silently
+// deleting every uploaded property photo/document, and (2) images were
+// being served back through your own (possibly idle/cold-started) backend
+// instead of a fast CDN edge network — which is what made them slow to load.
+const storage = new CloudinaryStorage();
 
 const fileFilter = (req, file, cb) => {
   const allowed = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'video/mp4', 'video/quicktime', 'video/webm'];

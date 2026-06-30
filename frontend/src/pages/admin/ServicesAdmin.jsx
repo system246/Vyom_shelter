@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import BackButton from '../../components/ui/BackButton';
+import { resolveFileUrl } from '../../utils/resolveFileUrl';
+import PageHeader from '../../components/ui/PageHeader';
 import { fetchAllServicesAdmin, addServiceApi, updateServiceApi, deleteServiceApi } from '../../services/serviceApi';
 import logo from '../../assets/logo.png';
 
@@ -79,7 +81,7 @@ function ServiceForm({ initial, editing, onSave, onClose, submitting }) {
   const [form, setForm]       = useState(initial || EMPTY_FORM);
   const [imgFile, setImgFile] = useState(null);
   const [imgPreview, setImgPrev] = useState(
-    editing?.image ? `/uploads/${editing.image}` : null
+    editing?.image ? resolveFileUrl(editing.image) : null
   );
 
   const handleImgChange = (file) => {
@@ -88,7 +90,7 @@ function ServiceForm({ initial, editing, onSave, onClose, submitting }) {
       const url = URL.createObjectURL(file);
       setImgPrev(url);
     } else {
-      setImgPrev(editing?.image ? `/uploads/${editing.image}` : null);
+      setImgPrev(editing?.image ? resolveFileUrl(editing.image) : null);
     }
   };
 
@@ -317,20 +319,22 @@ export default function ServicesAdmin() {
     <div className="max-w-5xl mx-auto px-4 py-8">
       <BackButton />
 
-      <div className="flex items-center justify-between mb-5">
-        <div>
-          <h1 className="text-xl font-bold text-[#1a3a5c]">Our Services</h1>
-          <p className="text-xs text-gray-400 mt-0.5">{services.length} service{services.length !== 1 ? 's' : ''} · {tab}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button onClick={load} className="btn-ghost border border-gray-200"><RefreshCw size={14} /></button>
-          {isHeadAdmin && (
-            <button onClick={openAdd} className="btn-primary text-xs px-4 py-2">
-              <Plus size={14} /> Add Service
-            </button>
-          )}
-        </div>
-      </div>
+      <PageHeader
+        icon={Layers}
+        title="Our Services"
+        subtitle={`${services.length} service${services.length !== 1 ? 's' : ''} · ${tab}`}
+        gradient="from-violet-600 via-purple-600 to-purple-500"
+        action={
+          <div className="flex items-center gap-2">
+            <button onClick={load} className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium bg-white/15 hover:bg-white/25 backdrop-blur-sm border border-white/20 text-white transition-colors"><RefreshCw size={14} /></button>
+            {isHeadAdmin && (
+              <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-white text-[#1a3a5c] hover:bg-purple-50 transition-colors">
+                <Plus size={14} /> Add Service
+              </button>
+            )}
+          </div>
+        }
+      />
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6">
@@ -367,7 +371,7 @@ export default function ServicesAdmin() {
                 {/* Logo */}
                 <div className="w-full sm:w-20 h-20 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center">
                   {s.image ? (
-                    <img src={`/uploads/${s.image}`} alt={s.title} className="w-full h-full object-cover" />
+                    <img src={resolveFileUrl(s.image)} alt={s.title} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-[#1a3a5c]/10">
                       <CatIcon size={28} className="text-[#1a3a5c]/40" />
