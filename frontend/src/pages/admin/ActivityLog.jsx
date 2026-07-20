@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import BackButton from '../../components/ui/BackButton';
 import { useAuth } from '../../context/AuthContext';
 import { Activity, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -30,7 +29,6 @@ export default function ActivityLog() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <BackButton />
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-bold text-[#1a3a5c]">Activity Log</h1>

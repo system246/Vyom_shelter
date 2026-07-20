@@ -1,5 +1,4 @@
 import { useLocation, Link } from 'react-router-dom';
-import Seo from '../components/seo/Seo';
 import { CheckCircle, Home, FileText, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -14,8 +13,6 @@ export default function Success() {
   };
 
   return (
-    <>
-      <Seo noindex title="Success" />
     <div className="max-w-xl mx-auto px-4 py-16 text-center">
       <div className="card p-10">
         <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
@@ -57,6 +54,5 @@ export default function Success() {
         </div>
       </div>
     </div>
-      </>
   );
 }

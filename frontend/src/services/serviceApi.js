@@ -1,3 +1,5 @@
+import { apiCall } from '../utils/apiCall';
+
 const BASE = '/api';
 
 // ---------- PUBLIC ----------
@@ -6,10 +8,7 @@ export const fetchServices = async (params = {}) => {
   const query = new URLSearchParams(
     Object.fromEntries(Object.entries(params).filter(([, v]) => v !== '' && v !== undefined && v !== null))
   );
-  const res  = await fetch(`${BASE}/services?${query}`);
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || 'Failed to load services');
-  return data;
+  return apiCall(`${BASE}/services?${query}`);
 };
 
 // ---------- ADMIN (head_admin only) ----------
@@ -19,7 +18,7 @@ export const fetchAllServicesAdmin = async (authFetch, { status } = {}) => {
   if (status) params.set('status', status);
   const res  = await authFetch(`${BASE}/services/admin/all?${params}`);
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message);
+  if (!res.ok) throw new Error(data.message || 'Failed to load services');
   return data;
 };
 

@@ -102,6 +102,7 @@ export default function Report() {
             <Section title="Referral Details">
               <Row label="Associate Ref No" value={referral?.associateRefNo} />
               <Row label="Associate Name"   value={referral?.associateName} />
+              <Row label="Circle"           value={referral?.circle} />
               <Row label="Candidate Ref No" value={referral?.newCandidateRefNo} />
             </Section>
 

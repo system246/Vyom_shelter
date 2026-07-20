@@ -12,7 +12,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (token) {
       fetch(`${BASE}/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
-        .then(r => r.ok ? r.json() : Promise.reject(new Error('Session expired')))
+        .then(r => r.ok ? r.json() : Promise.reject())
         .then(d => setUser(d.user))
         .catch(() => { localStorage.removeItem('ap_token'); setToken(null); })
         .finally(() => setLoading(false));

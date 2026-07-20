@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,50 +7,17 @@
   body { font-family: 'DM Sans', sans-serif; background-color: #f0f4fa; color: #0f2137; }
 }
 
-@layer utilities {
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-4px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes marquee {
-    from { transform: translateX(0); }
-    to   { transform: translateX(-50%); }
-  }
-  .animate-marquee { animation: marquee 28s linear infinite; }
-  .animate-marquee-slow { animation: marquee 45s linear infinite; }
-  .marquee-track:hover { animation-play-state: paused; }
-}
-
 @layer components {
-  .input-base { @apply w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#2563a8]/40 focus:border-[#2563a8]/40 placeholder:text-gray-400 transition-all duration-150 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed read-only:bg-gray-50; }
+  .input-base { @apply w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400 transition-all duration-150; }
   .input-error { @apply border-red-400 focus:ring-red-400; }
   .label-base { @apply block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide; }
-  .btn-primary { @apply bg-gradient-to-r from-[#1a3a5c] to-[#1f4a73] hover:from-[#173354] hover:to-[#235683] text-white px-6 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 flex items-center gap-2 shadow-[0_4px_14px_-2px_rgba(26,58,92,0.4)] hover:shadow-[0_6px_20px_-2px_rgba(26,58,92,0.5)] disabled:opacity-50 disabled:cursor-not-allowed; }
-  .btn-secondary { @apply bg-white hover:bg-gray-50 text-gray-700 px-6 py-2.5 rounded-xl font-medium text-sm border border-gray-200 transition-all duration-200 flex items-center gap-2; }
-  .btn-accent { @apply bg-gradient-to-r from-[#e85d26] to-[#f3792e] hover:from-[#d54e1a] hover:to-[#e86820] text-white px-6 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 flex items-center gap-2 shadow-[0_4px_14px_-2px_rgba(232,93,38,0.45)] hover:shadow-[0_6px_20px_-2px_rgba(232,93,38,0.55)]; }
-  .btn-ghost { @apply text-gray-500 hover:text-gray-800 hover:bg-gray-100 px-4 py-2 rounded-xl text-sm transition-all duration-200 flex items-center gap-2; }
-  .card { @apply bg-white rounded-2xl border border-gray-100 shadow-[0_2px_12px_-2px_rgba(15,33,55,0.06)] transition-shadow duration-200; }
-  .card-hover { @apply hover:shadow-[0_8px_24px_-4px_rgba(15,33,55,0.12)] hover:-translate-y-0.5 transition-all duration-200; }
-  .glass-nav { @apply bg-[#1a3a5c]/95 backdrop-blur-md; }
+  .btn-primary { @apply bg-[#1a3a5c] hover:bg-[#2563a8] text-white px-6 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed; }
+  .btn-secondary { @apply bg-white hover:bg-gray-50 text-gray-700 px-6 py-2.5 rounded-lg font-medium text-sm border border-gray-200 transition-all duration-200 flex items-center gap-2; }
+  .btn-accent { @apply bg-[#e85d26] hover:bg-orange-600 text-white px-6 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 flex items-center gap-2; }
+  .btn-ghost { @apply text-gray-500 hover:text-gray-800 hover:bg-gray-100 px-4 py-2 rounded-lg text-sm transition-all duration-200 flex items-center gap-2; }
+  .card { @apply bg-white rounded-xl border border-gray-100 shadow-sm; }
   .section-title { @apply text-sm font-semibold text-[#1a3a5c] mb-4 pb-3 border-b border-gray-100 flex items-center gap-2 uppercase tracking-wide; }
   .error-msg { @apply text-xs text-red-500 mt-1 flex items-center gap-1; }
-  .btn-teal { @apply bg-gradient-to-r from-[#0d9488] to-[#14b8a6] hover:from-[#0b7d73] hover:to-[#119488] text-white px-6 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 flex items-center gap-2 shadow-[0_4px_14px_-2px_rgba(13,148,136,0.4)] hover:shadow-[0_6px_20px_-2px_rgba(13,148,136,0.5)]; }
-  .btn-violet { @apply bg-gradient-to-r from-violet-600 to-purple-500 hover:from-violet-700 hover:to-purple-600 text-white px-6 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 flex items-center gap-2 shadow-[0_4px_14px_-2px_rgba(124,58,237,0.4)] hover:shadow-[0_6px_20px_-2px_rgba(124,58,237,0.5)]; }
-  .gradient-text { @apply bg-gradient-to-r from-[#1a3a5c] to-[#2563a8] bg-clip-text text-transparent; }
-
-  /* "Pop" card — colorful gradient top accent strip, for featured/highlight content */
-  .card-pop { @apply card relative overflow-hidden; }
-  .card-pop::before { content: ''; @apply absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#e85d26] via-[#ffb648] to-[#2563a8]; }
-
-  /* Subtle dot-grid texture for hero/empty-state backgrounds — adds depth without noise */
-  .bg-dot-grid {
-    background-image: radial-gradient(circle, rgba(255,255,255,0.15) 1px, transparent 1px);
-    background-size: 22px 22px;
-  }
-  /* Bold multi-color band — for sections that need to feel different from
-     the navy/orange brand colors used everywhere else (stats, highlights) */
-  .bg-vibrant-band { @apply bg-gradient-to-br from-[#4c1d95] via-[#7c3aed] to-[#db2777]; }
-  .bg-tint-blue { @apply bg-gradient-to-b from-[#eef4fc] to-[#f0f4fa]; }
 }
 
 .step-connector { flex: 1; height: 2px; background: #e2e8f0; margin: 0 2px; margin-top: -20px; transition: background 0.3s; }
@@ -70,31 +38,22 @@
   .card { box-shadow: none !important; }
 }
 
-/* ── Locomotive Scroll — Home page reveal animations ─────────────────────── */
-/* Simple fade-up: add data-scroll + class="loco-fade" to any element */
-[data-scroll].loco-fade {
-  opacity: 0;
-  transform: translateY(32px);
-  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-}
-[data-scroll].loco-fade.is-inview {
-  opacity: 1;
-  transform: translateY(0);
+
+/* Hide scrollbars on overflow-x scroll containers */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── Home page design tokens ── */
+.gradient-text { background: linear-gradient(to right, #1a3a5c, #2563a8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.card-hover { @apply hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200; }
+.card-pop { @apply card relative overflow-hidden; }
+.card-pop::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(to right, #e85d26, #ffb648, #2563a8); }
+.bg-vibrant-band { background: linear-gradient(135deg, #4c1d95, #7c3aed, #db2777); }
+.bg-tint-blue { background: linear-gradient(to bottom, #eef4fc, #f0f4fa); }
+.bg-dot-grid {
+  background-image: radial-gradient(circle, rgba(255,255,255,0.15) 1px, transparent 1px);
+  background-size: 22px 22px;
 }
 
-/* Staggered grid: add data-scroll + class="loco-stagger" to the grid wrapper.
-   Children animate sequentially — no extra markup needed. */
-[data-scroll].loco-stagger > * {
-  opacity: 0;
-  transform: translateY(28px);
-  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
-}
-[data-scroll].loco-stagger.is-inview > * { opacity: 1; transform: none; }
-[data-scroll].loco-stagger.is-inview > *:nth-child(2) { transition-delay: 0.08s; }
-[data-scroll].loco-stagger.is-inview > *:nth-child(3) { transition-delay: 0.16s; }
-[data-scroll].loco-stagger.is-inview > *:nth-child(4) { transition-delay: 0.24s; }
-[data-scroll].loco-stagger.is-inview > *:nth-child(5) { transition-delay: 0.32s; }
-[data-scroll].loco-stagger.is-inview > *:nth-child(6) { transition-delay: 0.40s; }
-/* ─────────────────────────────────────────────────────────────────────────── */
+/* Marquee keyframe */
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }

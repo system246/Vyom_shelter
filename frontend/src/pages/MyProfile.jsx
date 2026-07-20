@@ -1,13 +1,11 @@
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect, useRef } from 'react';
-import { Mail, Phone, Calendar, Printer, Camera, IdCard, Copy, KeyRound } from 'lucide-react';
+import { Mail, Phone, Calendar, Printer, Camera, IdCard } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import BackButton from '../components/ui/BackButton';
-import { resolveFileUrl } from '../utils/resolveFileUrl';
-import { HEAD_REFERRAL_CODE, HEAD_REFERRAL_NAME } from '../utils/constants';
 
 const BASE = import.meta.env.VITE_API_URL || '/api';
+const API_URL = BASE.replace('/api', '');
 
 const ROLE_STYLE = {
   head_admin: 'bg-purple-100 text-purple-700',
@@ -35,15 +33,9 @@ export default function MyProfile() {
   const [assocData, setAssocData] = useState(null);
 
   useEffect(() => {
-    if (user?.role !== 'associate') return;
-    if (user?.associateRecordId) {
+    if (user?.role === 'associate' && user?.associateRecordId) {
       authFetch(`/api/associates/${user.associateRecordId}`)
         .then(r => r.json()).then(d => { if (d.success) setAssocData(d.data); }).catch(() => {});
-    } else {
-      // Fallback for accounts that submitted before associateRecordId linking existed —
-      // /api/associates is already scoped server-side to "records I created".
-      authFetch(`/api/associates?limit=1`)
-        .then(r => r.json()).then(d => { if (d.success && d.data?.[0]) setAssocData(d.data[0]); }).catch(() => {});
     }
   }, [user]);
 
@@ -83,17 +75,14 @@ export default function MyProfile() {
     finally { setSaving(false); }
   };
 
-  const fullPhotoUrl = resolveFileUrl(photoUrl);
+  const fullPhotoUrl = photoUrl ? `${API_URL}/uploads/${photoUrl}` : null;
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <BackButton />
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-bold text-[#1a3a5c]">My Profile</h1>
         <div className="flex gap-2 print:hidden">
-          {user?.role === 'associate' && (
-            <Link to="/id-card" className="btn-ghost border border-gray-200"><IdCard size={14}/> ID Card</Link>
-          )}
+          <Link to="/id-card" className="btn-ghost border border-gray-200"><IdCard size={14}/> ID Card</Link>
           <button onClick={() => window.print()} className="btn-ghost border border-gray-200"><Printer size={14}/> Print</button>
         </div>
       </div>
@@ -103,30 +92,6 @@ export default function MyProfile() {
         <h1 className="text-2xl font-bold text-[#1a3a5c]">Associate Portal</h1>
         <p className="text-sm text-gray-500">Member Profile · {new Date().toLocaleDateString('en-IN', { day:'2-digit', month:'long', year:'numeric' })}</p>
       </div>
-
-      {/* Head Referral Code — head admin only, given to associates who have no referrer */}
-      {user?.role === 'head_admin' && (
-        <div className="card p-6 mb-4 bg-gradient-to-br from-[#1a3a5c] to-[#1f4a73] text-white print:hidden">
-          <div className="flex items-center gap-2 mb-1.5">
-            <KeyRound size={16} className="text-[#ff8a4c]" />
-            <p className="font-semibold text-sm uppercase tracking-wide">Head Office Referral Code</p>
-          </div>
-          <p className="text-xs text-blue-100 mb-4">
-            Give this code to any new associate who wasn't referred by someone else — they'll tick
-            "I wasn't referred by any associate" on the registration form and it fills in automatically.
-          </p>
-          <div className="flex items-center gap-3 bg-white/10 rounded-xl px-4 py-3">
-            <span className="font-mono text-lg font-bold tracking-wide flex-1">{HEAD_REFERRAL_CODE}</span>
-            <button
-              onClick={() => { navigator.clipboard.writeText(HEAD_REFERRAL_CODE); toast.success('Copied!'); }}
-              className="bg-white/15 hover:bg-white/25 rounded-lg p-2 transition-colors"
-            >
-              <Copy size={14} />
-            </button>
-          </div>
-          <p className="text-[11px] text-blue-200 mt-2">{HEAD_REFERRAL_NAME}</p>
-        </div>
-      )}
 
       <div className="card p-6 mb-4 print:shadow-none print:border print:border-gray-200">
         {/* Photo + info */}
@@ -206,6 +171,7 @@ export default function MyProfile() {
               ]},
               { title: 'Referral', rows: [
                 ['Ref No', assocData.referral?.associateRefNo], ['Associate', assocData.referral?.associateName],
+                ['Circle', assocData.referral?.circle],
               ]},
             ].map(section => (
               <div key={section.title}>

@@ -7,8 +7,8 @@ export const personalSchema = z.object({
   gender:      z.enum(['male', 'female', 'other'], { required_error: 'Select a gender' }),
   address:     z.string().min(10, 'Address must be at least 10 characters'),
   pincode:     z.string().regex(/^\d{6}$/, 'Pincode must be 6 digits'),
-  mobile:      z.string().regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit mobile number'),
-  whatsapp:    z.string().regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit WhatsApp number'),
+  mobile:      z.string().regex(/^\d{10}$/, 'Mobile must be 10 digits'),
+  whatsapp:    z.string().regex(/^\d{10}$/, 'WhatsApp must be 10 digits'),
   email:       z.string().email('Enter a valid email address'),
 });
 
@@ -34,50 +34,10 @@ export const bankSchema = z.object({
 export const referralSchema = z.object({
   associateRefNo:   z.string().min(1, 'Associate Ref No is required'),
   associateName:    z.string().min(2, 'Associate name is required'),
+  circle:           z.string().min(2, 'Circle is required'),
   newCandidateRefNo: z.string().min(1, 'New Candidate Referral No is required'),
-  isDirect:         z.boolean().optional(),
 });
 
 export const declarationSchema = z.object({
   acceptTerms: z.literal(true, { errorMap: () => ({ message: 'You must accept the terms & conditions' }) }),
-});
-
-export const listPropertySchema = z.object({
-  listingType:  z.enum(['sale', 'rent']),
-  propertyType: z.string().min(1, 'Select a property type'),
-  title:        z.string().min(5, 'Title must be at least 5 characters'),
-  description:  z.string().min(20, 'Description must be at least 20 characters'),
-  location: z.object({
-    state:    z.string().min(1, 'State is required'),
-    district: z.string().min(1, 'District is required'),
-    city:     z.string().min(1, 'City is required'),
-    locality: z.string().min(1, 'Locality is required'),
-    address:  z.string().min(5, 'Address is required'),
-    pincode:  z.string().regex(/^\d{6}$/, 'Must be 6 digits'),
-  }),
-  area: z.object({
-    value: z.string().min(1, 'Area is required'),
-    unit:  z.enum(['sqft', 'sqyd', 'acre']),
-  }),
-  frontRoadWidth:  z.string().optional(),
-  facing:          z.string().optional(),
-  facilities:      z.array(z.string()),
-  nearbyLandmarks: z.array(z.object({ type: z.string(), distanceKm: z.number() })),
-  price:      z.string().min(1, 'Price is required'),
-  negotiable: z.boolean(),
-  seller: z.object({
-    name:   z.string().min(2, 'Your name is required'),
-    mobile: z.string().regex(/^[6-9]\d{9}$/, 'Enter a valid 10-digit mobile number'),
-    email:  z.string().refine(v => v === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), 'Enter a valid email'),
-  }),
-  ownership: z.object({
-    ownerName:              z.string().optional(),
-    details:                z.string().optional(),
-    previousOwnerName:      z.string().optional(),
-    ownershipChain:         z.string().optional(),
-    possessionType:         z.string().optional(),
-    numberOfPreviousOwners: z.string().optional(),
-    yearOfPurchase:         z.string().optional(),
-    litigationFree:         z.boolean(),
-  }),
 });

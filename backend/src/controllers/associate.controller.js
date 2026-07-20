@@ -172,3 +172,24 @@ export const deleteAssociate = async (req, res, next) => {
     res.json({ success: true, message: 'Deleted' });
   } catch (err) { next(err); }
 };
+
+// GET /api/associates/verify-referral?code=ASC123456  — PUBLIC (no login,
+// since the person registering doesn't have an account yet). Returns the
+// referrer's name so the form can auto-fill it and the applicant can
+// visually confirm the code is real before submitting.
+export const verifyReferral = async (req, res, next) => {
+  try {
+    const code = req.query.code?.trim();
+    if (!code) return res.status(400).json({ success: false, message: 'Referral code required' });
+
+    const associate = await Associate.findOne(
+      { 'referral.newCandidateRefNo': code, status: 'approved' },
+      { 'personal.fullName': 1, associateId: 1 }
+    );
+
+    if (!associate)
+      return res.status(404).json({ success: false, message: 'Referral code not found or associate not yet approved' });
+
+    res.json({ success: true, data: { name: associate.personal.fullName, associateId: associate.associateId } });
+  } catch (err) { next(err); }
+};

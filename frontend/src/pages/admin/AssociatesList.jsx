@@ -1,10 +1,7 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
-import BackButton from '../../components/ui/BackButton';
-import PageHeader from '../../components/ui/PageHeader';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Search, Eye, Trash2, RefreshCw, CheckCircle, XCircle, Clock, X, ChevronLeft, ChevronRight, Download, Users as Users2 } from 'lucide-react';
+import { Search, Eye, Trash2, RefreshCw, CheckCircle, XCircle, Clock, X, ChevronLeft, ChevronRight, Download } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { resolveFileUrl } from '../../utils/resolveFileUrl';
 
 const STATUS = {
   pending:  { cls: 'bg-amber-50 text-amber-700 border-amber-200', icon: Clock },
@@ -15,6 +12,20 @@ const STATUS = {
 const Badge = ({ s }) => {
   const cfg = STATUS[s] || STATUS.pending;
   const Icon = cfg.icon;
+  const exportCSV = () => {
+    const headers = ['ID','Name','Mobile','Email','Circle','Status','Submitted'];
+    const rows = list.map(a => [
+      a.associateId, a.personal?.fullName, a.personal?.mobile,
+      a.personal?.email, a.referral?.circle, a.status,
+      new Date(a.createdAt).toLocaleDateString('en-IN')
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${v||''}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = 'associates.csv'; a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${cfg.cls}`}>
@@ -83,10 +94,9 @@ export default function AssociatesList() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
-      // Update UI only after confirmed success — no optimistic update
+      toast.success(`Status updated to ${newStatus}`);
       setDetail(d => d ? { ...d, status: newStatus } : d);
       setList(l => l.map(a => a.associateId === associateId ? { ...a, status: newStatus } : a));
-      toast.success(`Status updated to ${newStatus}`);
     } catch (err) { toast.error(err.message); }
     finally { setUpdating(false); }
   };
@@ -103,43 +113,26 @@ export default function AssociatesList() {
     } catch (err) { toast.error(err.message); }
   };
 
-  const filtered = useMemo(() => list.filter(a =>
+  // Local search filter
+  const filtered = list.filter(a =>
     !search ||
     a.personal?.fullName?.toLowerCase().includes(search.toLowerCase()) ||
     a.associateId?.toLowerCase().includes(search.toLowerCase()) ||
     a.personal?.mobile?.includes(search)
-  ), [list, search]);
-
-  const exportCSV = () => {
-    const headers = ['ID','Name','Mobile','Email','Status','Submitted'];
-    const rows = list.map(a => [
-      a.associateId, a.personal?.fullName, a.personal?.mobile,
-      a.personal?.email, a.status,
-      new Date(a.createdAt).toLocaleDateString('en-IN')
-    ]);
-    const csv = [headers, ...rows].map(r => r.map(v => `"${v||''}"`).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url  = URL.createObjectURL(blob);
-    const a2   = document.createElement('a');
-    a2.href = url; a2.download = 'associates.csv'; a2.click();
-    URL.revokeObjectURL(url);
-  };
+  );
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      <BackButton />
-      <PageHeader
-        icon={Users2}
-        title="Associates"
-        subtitle={`${total} total records`}
-        gradient="from-[#1a3a5c] via-[#1f4a73] to-[#2563a8]"
-        action={
-          <div className="flex gap-2">
-            <button onClick={exportCSV} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-white/15 hover:bg-white/25 backdrop-blur-sm border border-white/20 text-white transition-colors"><Download size={14}/> Export CSV</button>
-            <button onClick={load} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-white/15 hover:bg-white/25 backdrop-blur-sm border border-white/20 text-white transition-colors"><RefreshCw size={14}/> Refresh</button>
-          </div>
-        }
-      />
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-xl font-bold text-[#1a3a5c]">Associates</h1>
+          <p className="text-xs text-gray-400 mt-0.5">{total} total records</p>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={exportCSV} className="btn-ghost border border-gray-200"><Download size={14}/> Export CSV</button>
+          <button onClick={load} className="btn-ghost border border-gray-200"><RefreshCw size={14}/> Refresh</button>
+        </div>
+      </div>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-5">
@@ -171,7 +164,7 @@ export default function AssociatesList() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50">
-                  {['ID', 'Name', 'Mobile', 'Email', 'Status', 'Actions'].map(h => (
+                  {['ID', 'Name', 'Mobile', 'Email', 'Circle', 'Status', 'Actions'].map(h => (
                     <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">{h}</th>
                   ))}
                 </tr>
@@ -183,6 +176,7 @@ export default function AssociatesList() {
                     <td className="px-4 py-3 text-sm font-medium text-gray-800">{a.personal?.fullName}</td>
                     <td className="px-4 py-3 text-sm text-gray-500">{a.personal?.mobile}</td>
                     <td className="px-4 py-3 text-sm text-gray-500 max-w-[160px] truncate">{a.personal?.email}</td>
+                    <td className="px-4 py-3 text-sm text-gray-500">{a.referral?.circle}</td>
                     <td className="px-4 py-3"><Badge s={a.status} /></td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
@@ -284,14 +278,14 @@ export default function AssociatesList() {
                   <Row label="PAN No"       value={detail.documents?.panNumber} />
                   <div className="flex gap-3 mt-2">
                     {detail.documents?.aadhaarFile ? (
-                      <a href={resolveFileUrl(detail.documents.aadhaarFile)}
+                      <a href={`${import.meta.env.VITE_API_URL?.replace('/api','') || ''}/uploads/${detail.documents.aadhaarFile}`}
                         target="_blank" rel="noopener noreferrer"
                         className="btn-ghost border border-gray-200 px-3 py-1.5 text-xs flex items-center gap-1">
                         <Eye size={13} /> View Aadhaar
                       </a>
                     ) : <span className="text-xs text-gray-400">Aadhaar not uploaded</span>}
                     {detail.documents?.panFile ? (
-                      <a href={resolveFileUrl(detail.documents.panFile)}
+                      <a href={`${import.meta.env.VITE_API_URL?.replace('/api','') || ''}/uploads/${detail.documents.panFile}`}
                         target="_blank" rel="noopener noreferrer"
                         className="btn-ghost border border-gray-200 px-3 py-1.5 text-xs flex items-center gap-1">
                         <Eye size={13} /> View PAN
@@ -310,6 +304,7 @@ export default function AssociatesList() {
                   <p className="section-title">Referral</p>
                   <Row label="Ref No"       value={detail.referral?.associateRefNo} />
                   <Row label="Associate"    value={detail.referral?.associateName} />
+                  <Row label="Circle"       value={detail.referral?.circle} />
                   <Row label="Candidate Ref" value={detail.referral?.newCandidateRefNo} />
                 </div>
                 <div>

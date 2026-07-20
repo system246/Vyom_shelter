@@ -1,9 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
-import BackButton from '../../components/ui/BackButton';
-import PageHeader from '../../components/ui/PageHeader';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { UserPlus, Trash2, RefreshCw, ChevronDown, ChevronRight, Search, Users } from 'lucide-react';
+import { UserPlus, Trash2, RefreshCw, ChevronDown, ChevronRight, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const ROLE_STYLE = {
@@ -97,19 +95,18 @@ export default function UsersList() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <BackButton />
-      <PageHeader
-        icon={Users}
-        title={isHead ? 'User Management' : 'My Team'}
-        subtitle={`${users.length} users`}
-        gradient="from-sky-600 via-blue-600 to-[#2563a8]"
-        action={
-          <div className="flex gap-2">
-            <button onClick={load} className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium bg-white/15 hover:bg-white/25 backdrop-blur-sm border border-white/20 text-white transition-colors"><RefreshCw size={14} /></button>
-            <Link to="/admin/users/create" className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-white text-[#1a3a5c] hover:bg-blue-50 transition-colors"><UserPlus size={14} /> Create User</Link>
-          </div>
-        }
-      />
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-xl font-bold text-[#1a3a5c]">
+            {isHead ? 'User Management' : 'My Team'}
+          </h1>
+          <p className="text-xs text-gray-400 mt-0.5">{users.length} users</p>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={load} className="btn-ghost border border-gray-200"><RefreshCw size={14} /></button>
+          <Link to="/admin/users/create" className="btn-primary"><UserPlus size={14} /> Create User</Link>
+        </div>
+      </div>
 
       {/* Tabs */}
       <div className="flex gap-1 mb-5 border-b border-gray-100">

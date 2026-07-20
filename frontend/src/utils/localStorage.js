@@ -1,10 +1,5 @@
 import { DRAFT_KEY } from './constants';
 
-// Auto-generates the new candidate's own referral code — never typed by the user.
-// Persisted alongside the draft so it stays stable across the wizard / a page refresh.
-export const generateCandidateRefNo = () =>
-  'NEW-' + Date.now().toString(36).toUpperCase() + Math.floor(Math.random() * 900 + 100);
-
 export const saveDraft = (data) => {
   try {
     // Don't save File objects to localStorage

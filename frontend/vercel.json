@@ -1,6 +1,5 @@
 {
   "rewrites": [
-    { "source": "/sitemap.xml", "destination": "https://REPLACE_WITH_YOUR_BACKEND_URL/sitemap.xml" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

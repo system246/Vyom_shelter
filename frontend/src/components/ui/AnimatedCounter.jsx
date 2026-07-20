@@ -1,9 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 
-/**
- * Counts up from 0 to `value` once it scrolls into view. Used on the
- * homepage stats band for a bit of life instead of static numbers.
- */
 export default function AnimatedCounter({ value, suffix = '', duration = 1400 }) {
   const [count, setCount] = useState(0);
   const ref = useRef(null);
@@ -18,7 +14,7 @@ export default function AnimatedCounter({ value, suffix = '', duration = 1400 })
         const start = performance.now();
         const tick = (now) => {
           const progress = Math.min((now - start) / duration, 1);
-          const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+          const eased = 1 - Math.pow(1 - progress, 3);
           setCount(Math.round(eased * value));
           if (progress < 1) requestAnimationFrame(tick);
         };
