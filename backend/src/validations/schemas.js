@@ -112,6 +112,7 @@ export const updatePropertyStatusSchema = z.object({
   rejectionReason: z.string().optional(),
   brokeragePercent: z.coerce.number().min(0).max(100).optional(),
   featured: z.coerce.boolean().optional(),
+  isExclusive: z.coerce.boolean().optional(),
 });
 
 // ---------- Services ----------
@@ -162,7 +163,7 @@ export const associateDocumentSchema = z.object({
 
 export const associateBankSchema = z.object({
   bankName: z.string().min(2),
-  branch: z.string().min(2),
+  branch: z.string().optional().default(''),   // auto-filled from IFSC lookup, may be empty if lookup failed
   ifscCode: ifsc,
   accountNumber: z.string().regex(/^\d{9,18}$/, 'Account number must be 9–18 digits'),
 });

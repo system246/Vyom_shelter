@@ -139,18 +139,43 @@ export const deleteUser = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-// GET /api/users/:id/tree
+// GET /api/users/:id/tree — recursive, includes associate records as leaf nodes
 export const getUserTree = async (req, res, next) => {
   try {
     const me       = req.user;
-    const targetId = me.role === 'associate' ? me._id : req.params.id;
-    const direct   = await User.find({ createdBy: targetId }).select('profile email role createdAt isActive');
-    const tree = await Promise.all(
-      direct.map(async (child) => {
-        const grandchildren = await User.find({ createdBy: child._id }).select('profile email role createdAt isActive');
-        return { ...child.toJSON(), children: grandchildren };
-      })
-    );
+
+    // Associates have no tree — this route is for head_admin and admin only
+    if (me.role === 'associate')
+      return res.json({ success: true, data: [] });
+
+    const rootId = me.role === 'head_admin' ? req.params.id : me._id;
+
+    // Recursive builder — no fixed depth limit
+    const buildTree = async (parentId, depth = 0) => {
+      if (depth > 8) return []; // safety cap against circular references
+      const children = await User.find({ createdBy: parentId })
+        .select('profile email role createdAt isActive associateRecordId')
+        .lean();
+
+      return Promise.all(children.map(async (child) => {
+        const subChildren = await buildTree(child._id, depth + 1);
+
+        // Attach the associate registration record (name, status, referral
+        // code) if this user has one — so the tree shows real membership data
+        let associateRecord = null;
+        if (child.associateRecordId) {
+          const { default: Associate } = await import('../models/Associate.model.js');
+          associateRecord = await Associate.findOne(
+            { associateId: child.associateRecordId },
+            { status: 1, 'referral.newCandidateRefNo': 1, associateId: 1 }
+          ).lean();
+        }
+
+        return { ...child, children: subChildren, associateRecord };
+      }));
+    };
+
+    const tree = await buildTree(rootId);
     res.json({ success: true, data: tree });
   } catch (err) { next(err); }
 };
