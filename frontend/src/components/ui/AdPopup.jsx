@@ -27,6 +27,17 @@ const ADS = [
     label: 'Join as a Real Estate Associate',
     sublabel: 'Earn ₹50,000–₹2,00,000/month — Vyom Shelter × KRS Buildinfra',
   },
+  // ← ADD THIS THIRD ENTRY
+  {
+    id: 'independence-offer',
+    image: '/promo-independence-offer.jpg',
+    alt: 'Independence Day & Rakshabandhan Special Offer — Free Honda Activa on Plot Purchase',
+    linkTo: '/properties?propertyType=plot&city=Agra',
+    phone: '9358344037',
+    whatsappMsg: 'Hello, I am interested in the Independence Day plot offer at Gamari, Malpura-Jagner. Please share details.',
+    label: 'स्वतंत्रता दिवस एवं रक्षाबंधन ऑफर — 31 अगस्त तक',
+    sublabel: 'प्रत्येक प्लॉट की खरीद पर पाएं Honda Activa — Gamari, Malpura-Jagner Project',
+  },
 ];
 
 export default function AdPopup() {
