@@ -30,7 +30,7 @@ const ADS = [
   // ← ADD THIS THIRD ENTRY
   {
     id: 'independence-offer',
-    image: '/real.jpg',
+    image: '/real.jpeg',
     alt: 'Independence Day & Rakshabandhan Special Offer — Free Honda Activa on Plot Purchase',
     linkTo: '/properties?propertyType=plot&city=Agra',
     phone: '9358344037',
