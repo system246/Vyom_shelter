@@ -89,9 +89,9 @@ export const getProperties = async (req, res, next) => {
     if (listingType)  filter.listingType  = listingType;
     if (propertyType) filter.propertyType = propertyType;
     if (city)          filter['location.city'] = new RegExp(escapeRegex(String(city)), 'i');
-    if (featured === 'true') filter.featured = true;
+    if (featured === 'true')    filter.featured    = true;
     if (isExclusive === 'true') filter.isExclusive = true;
-    if (verifiedOnly === 'false') delete filter.status; // not exposed publicly, kept for future admin use
+    if (verifiedOnly === 'false') delete filter.status;
 
     if (minPrice || maxPrice) {
       filter.price = {};
@@ -197,11 +197,11 @@ export const updatePropertyStatus = async (req, res, next) => {
     const { status, rejectionReason, brokeragePercent, featured, isExclusive } = parsed.data;
 
     const update = { reviewedBy: req.user._id };
-    if (status !== undefined) update.status = status;
-    if (rejectionReason !== undefined) update.rejectionReason = rejectionReason;
+    if (status !== undefined)          update.status          = status;
+    if (rejectionReason !== undefined)  update.rejectionReason = rejectionReason;
     if (brokeragePercent !== undefined) update.brokeragePercent = brokeragePercent;
-    if (featured !== undefined) update.featured = featured;
-    if (isExclusive !== undefined) update.isExclusive = isExclusive;
+    if (featured !== undefined)         update.featured        = featured;
+    if (isExclusive !== undefined)      update.isExclusive     = isExclusive;
 
     const property = await Property.findOneAndUpdate({ propertyId: req.params.id }, update, { new: true });
     if (!property) return res.status(404).json({ success: false, code: 'NOT_FOUND', message: 'Property not found.' });

@@ -13,8 +13,8 @@ const formatPrice = (price) => {
 };
 
 // Static fallback — always shows even before any DB exclusive properties exist.
-// These are your own properties. Add more here or mark DB properties as
-// isExclusive=true from the admin panel to have them appear dynamically.
+// Add more entries here or mark properties as isExclusive=true from the admin
+// panel to have them appear dynamically alongside these.
 const STATIC_LISTINGS = [
   {
     _id: 'static-gamri-mor',
@@ -26,12 +26,16 @@ const STATIC_LISTINGS = [
     media: { images: ['/promo-gamri-mor.jpg'] },
     isStatic: true,
     phone: '9358344037',
-    highlights: ['धारा 143 के साथ आवासीय घोषित', '5 min from New South Bypass', 'Electricity & Street Lights', 'Pucca RCC Roads'],
+    highlights: [
+      'धारा 143 के साथ आवासीय घोषित',
+      '5 min from New South Bypass',
+      'Electricity & Street Lights',
+    ],
   },
 ];
 
 function ExclusiveCard({ property }) {
-  const img = property.media?.images?.[0];
+  const img    = property.media?.images?.[0];
   const imgSrc = img?.startsWith('/') ? img : resolveFileUrl(img);
 
   const Inner = () => (
@@ -55,7 +59,6 @@ function ExclusiveCard({ property }) {
           <p className="text-white font-bold text-base">{formatPrice(property.price)}</p>
         </div>
       </div>
-
       <div className="p-4">
         <h3 className="font-semibold text-gray-800 text-sm mb-1 line-clamp-1">{property.title}</h3>
         <div className="flex items-center gap-1 text-gray-400 mb-2">
@@ -113,7 +116,7 @@ export default function ExclusiveProperties() {
   useEffect(() => {
     fetch(`${BASE}/properties?isExclusive=true&status=approved&limit=8`)
       .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data?.data) setDbProperties(data.data); })
+      .then(data => { if (data?.data?.length) setDbProperties(data.data); })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -134,7 +137,7 @@ export default function ExclusiveProperties() {
               <Star size={11} className="fill-[#ffb648]" /> Vyom Shelter Exclusive
             </div>
             <h2 className="text-xl font-bold text-white">Our Own Properties</h2>
-            <p className="text-xs text-blue-300 mt-1">Handpicked & directly managed by Vyom Shelter Pvt. Ltd.</p>
+            <p className="text-xs text-blue-300 mt-1">Handpicked &amp; directly managed by Vyom Shelter Pvt. Ltd.</p>
           </div>
           <a href="tel:9358344037"
             className="flex items-center gap-1.5 text-xs font-medium bg-[#e85d26] hover:bg-orange-500 text-white px-4 py-2 rounded-xl transition-colors">
@@ -144,9 +147,7 @@ export default function ExclusiveProperties() {
 
         {loading ? (
           <div className="flex gap-4">
-            {[...Array(2)].map((_, i) => (
-              <div key={i} className="w-72 h-72 rounded-xl bg-white/5 animate-pulse flex-shrink-0" />
-            ))}
+            {[1, 2].map(i => <div key={i} className="w-72 h-72 rounded-xl bg-white/5 animate-pulse flex-shrink-0" />)}
           </div>
         ) : (
           <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory">

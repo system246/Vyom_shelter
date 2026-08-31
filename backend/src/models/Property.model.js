@@ -78,8 +78,8 @@ const propertySchema = new mongoose.Schema(
     },
 
     status:   { type: String, enum: ['pending', 'approved', 'rejected', 'sold', 'rented'], default: 'pending', index: true },
-    featured: { type: Boolean, default: false },
-    isExclusive: { type: Boolean, default: false }, // Vyom Shelter's own properties shown in the Exclusive section
+    featured:    { type: Boolean, default: false },
+    isExclusive: { type: Boolean, default: false }, // Vyom Shelter's own properties — shown in the Exclusive section on homepage
 
     brokeragePercent: { type: Number, default: null },
     reviewedBy:  { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },

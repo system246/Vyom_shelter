@@ -142,35 +142,33 @@ export const deleteUser = async (req, res, next) => {
 // GET /api/users/:id/tree — recursive, includes associate records as leaf nodes
 export const getUserTree = async (req, res, next) => {
   try {
-    const me       = req.user;
+    const me = req.user;
 
-    // Associates have no tree — this route is for head_admin and admin only
+    // Associates have no tree view — only head_admin and admin
     if (me.role === 'associate')
       return res.json({ success: true, data: [] });
 
+    // head_admin sees the full tree from any root; admin sees only their own subtree
     const rootId = me.role === 'head_admin' ? req.params.id : me._id;
 
-    // Recursive builder — no fixed depth limit
     const buildTree = async (parentId, depth = 0) => {
-      if (depth > 8) return []; // safety cap against circular references
+      if (depth > 8) return []; // safety cap against accidental infinite recursion
       const children = await User.find({ createdBy: parentId })
         .select('profile email role createdAt isActive associateRecordId')
         .lean();
 
       return Promise.all(children.map(async (child) => {
         const subChildren = await buildTree(child._id, depth + 1);
-
-        // Attach the associate registration record (name, status, referral
-        // code) if this user has one — so the tree shows real membership data
         let associateRecord = null;
         if (child.associateRecordId) {
-          const { default: Associate } = await import('../models/Associate.model.js');
-          associateRecord = await Associate.findOne(
-            { associateId: child.associateRecordId },
-            { status: 1, 'referral.newCandidateRefNo': 1, associateId: 1 }
-          ).lean();
+          try {
+            const Associate = (await import('../models/Associate.model.js')).default;
+            associateRecord = await Associate.findOne(
+              { associateId: child.associateRecordId },
+              { status: 1, 'referral.newCandidateRefNo': 1, associateId: 1 }
+            ).lean();
+          } catch {}
         }
-
         return { ...child, children: subChildren, associateRecord };
       }));
     };

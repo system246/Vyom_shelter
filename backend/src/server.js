@@ -23,6 +23,9 @@ import { logger } from './utils/logger.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
+app.set('trust proxy', 1); // Render/Railway/Heroku sit behind a reverse proxy — without this,
+// express-rate-limit sees the proxy's IP for every request instead of the
+// real client IP, which means the rate limit is shared across ALL users.
 
 connectDB();
 
@@ -30,7 +33,24 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' }, // allow frontend (different origin) to load /uploads images
   contentSecurityPolicy: false, // this is an API + file server, not a page-rendering app; CSP isn't applicable here
 }));
-app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:5173', credentials: true }));
+const ALLOWED_ORIGINS = [
+  process.env.FRONTEND_URL,
+  'https://vyomshelter.com',
+  'https://www.vyomshelter.com',
+  'https://vyom-shelter.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:4173',
+].filter(Boolean);
+
+app.use(cors({
+  origin: (origin, cb) => {
+    // Allow requests with no origin (mobile apps, Postman, curl)
+    if (!origin) return cb(null, true);
+    if (ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+    cb(new Error(`CORS: origin ${origin} not allowed`));
+  },
+  credentials: true,
+}));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(sanitizeInput);

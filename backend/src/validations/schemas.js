@@ -163,7 +163,7 @@ export const associateDocumentSchema = z.object({
 
 export const associateBankSchema = z.object({
   bankName: z.string().min(2),
-  branch: z.string().optional().default(''),   // auto-filled from IFSC lookup, may be empty if lookup failed
+  branch: z.string().optional().default(''), // auto-filled from IFSC lookup on the frontend, may be empty if lookup failed
   ifscCode: ifsc,
   accountNumber: z.string().regex(/^\d{9,18}$/, 'Account number must be 9–18 digits'),
 });
